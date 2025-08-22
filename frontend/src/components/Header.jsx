@@ -1,7 +1,17 @@
 import React from 'react';
 import { Menu, User } from 'lucide-react';
 
-export default function Header({ currentPage, onNavigate, onMenuToggle, isMenuOpen, isAuthed, onLogout }) {
+export default function Header({
+  currentPage,
+  onNavigate,
+  onMenuToggle,
+  isMenuOpen,
+  isAuthed,
+  onLogout,
+  user, // <-- add this
+}) {
+  const isFarmer = isAuthed && user?.role === 'farmer';
+
   return (
     <header className="bg-white shadow-sm border-b border-green-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -35,10 +45,12 @@ export default function Header({ currentPage, onNavigate, onMenuToggle, isMenuOp
 
           {/* Right side */}
           <div className="flex items-center space-x-4">
-            {isAuthed && (
+            {isFarmer && (
               <button
                 onClick={() => onNavigate('dashboard')}
                 className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full transition-colors"
+                aria-label="Open dashboard"
+                title="Dashboard"
               >
                 <User className="h-4 w-4" />
               </button>
@@ -63,6 +75,7 @@ export default function Header({ currentPage, onNavigate, onMenuToggle, isMenuOp
             <button
               onClick={onMenuToggle}
               className="md:hidden text-gray-600 hover:text-green-600 transition-colors"
+              aria-label="Toggle menu"
             >
               <Menu className="h-6 w-6" />
             </button>
@@ -70,7 +83,7 @@ export default function Header({ currentPage, onNavigate, onMenuToggle, isMenuOp
         </div>
       </div>
 
-      {/* Mobile menu (unchanged except Login link) */}
+      {/* Mobile menu */}
       {isMenuOpen && (
         <div className="md:hidden border-t border-green-100">
           <div className="px-2 pt-2 pb-3 space-y-1 bg-white">
@@ -87,6 +100,19 @@ export default function Header({ currentPage, onNavigate, onMenuToggle, isMenuOp
                 {key.charAt(0).toUpperCase()+key.slice(1)}
               </button>
             ))}
+
+            {isFarmer && (
+              <button
+                onClick={() => onNavigate('dashboard')}
+                className={`block w-full text-left px-3 py-2 text-base font-medium rounded-md transition-colors ${
+                  currentPage === 'dashboard'
+                    ? 'text-green-700 bg-green-50'
+                    : 'text-gray-700 hover:text-green-700 hover:bg-green-50'
+                }`}
+              >
+                Dashboard
+              </button>
+            )}
 
             {!isAuthed && (
               <button

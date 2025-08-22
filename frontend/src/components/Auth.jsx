@@ -10,28 +10,58 @@ export default function Auth({ onAuthSuccess, onNavigate }) {
     name: "",
     email: "",
     password: "",
-    role: "Farmer",
+    role: "Farmer", // display label; we'll normalize to lowercase before sending
   });
 
-  const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const onChange = (e) =>
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
+  function normalizeRole(label) {
+    // convert "Farmer"/"Buyer" → "farmer"/"buyer"
+    return String(label || "").trim().toLowerCase();
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
+      const email = form.email.trim();
+      const password = form.password; // keep as typed
+      const name = form.name.trim();
+
       const payload =
         mode === "login"
-          ? { email: form.email, password: form.password }
-          : { name: form.name, email: form.email, password: form.password, role: form.role };
+          ? { email, password }
+          : {
+              name,
+              email,
+              password,
+              role: normalizeRole(form.role),
+            };
 
       const data = mode === "login" ? await api.login(payload) : await api.signup(payload);
+      // Expect backend to return: { token, user }
+      if (!data?.user || !data?.token) {
+        throw new Error("Invalid auth response from server");
+      }
 
-      saveAuth(data);
+      // Persist in localStorage for route guards
+      saveAuth({ token: data.token, user: data.user });
+
+      // Let App.jsx store user in state
       onAuthSuccess(data.user);
-      onNavigate("dashboard"); // go somewhere after auth
+
+      // Route based on role
+      const role = String(data.user?.role || "").toLowerCase();
+      if (role === "farmer") {
+        onNavigate("dashboard");
+      } else {
+        // Buyers (or any other role) -> marketplace (adjust if you prefer "/")
+        onNavigate("marketplace");
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err?.message || "Authentication failed");
     } finally {
       setLoading(false);
     }
@@ -52,18 +82,22 @@ export default function Auth({ onAuthSuccess, onNavigate }) {
 
         <div className="mt-4 flex gap-2 justify-center">
           <button
+            type="button"
             className={`px-4 py-2 rounded-md text-sm font-medium ${
               mode === "login" ? "bg-green-600 text-white" : "bg-green-50 text-green-700"
             }`}
             onClick={() => setMode("login")}
+            disabled={loading}
           >
             Login
           </button>
           <button
+            type="button"
             className={`px-4 py-2 rounded-md text-sm font-medium ${
               mode === "signup" ? "bg-green-600 text-white" : "bg-green-50 text-green-700"
             }`}
             onClick={() => setMode("signup")}
+            disabled={loading}
           >
             Sign up
           </button>
@@ -109,6 +143,7 @@ export default function Auth({ onAuthSuccess, onNavigate }) {
               className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="you@example.com"
               required
+              autoComplete="email"
             />
           </div>
 
@@ -122,6 +157,7 @@ export default function Auth({ onAuthSuccess, onNavigate }) {
               className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="••••••••"
               required
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
             />
           </div>
 
