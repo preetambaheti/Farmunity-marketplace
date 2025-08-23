@@ -3,6 +3,8 @@ import os
 from functools import wraps
 import re
 import json
+import requests
+from collections import defaultdict
 
 from bson import ObjectId, Decimal128
 from dotenv import load_dotenv
@@ -12,6 +14,10 @@ from pymongo import MongoClient, ASCENDING, DESCENDING
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 
+# ---- Gemini (AI) ----
+# pip install google-generativeai
+import google.generativeai as genai
+
 load_dotenv()
 
 # ---- Config ----
@@ -20,9 +26,17 @@ DB_NAME = os.getenv("DB_NAME", "farmunity")
 JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret")
 JWT_EXPIRE_DAYS = 7
 
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")  # or gemini-1.5-pro
+OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY") or os.getenv("OWM_API_KEY")
+
+# Configure Gemini once
+if GOOGLE_API_KEY:
+    genai.configure(api_key=GOOGLE_API_KEY)
+
 app = Flask(__name__)
 # In production, lock origins to your exact frontend origin
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
 # ---- Mongo ----
 client = MongoClient(MONGO_URI)
@@ -35,6 +49,10 @@ messages_col = db["messages"]
 equipment_col = db["equipment"]
 notifications = db["notifications"]
 bookings = db["bookings"]
+# NEW: AI chat sessions (per user)
+ai_sessions = db["ai_sessions"]
+# NEW: Community forum
+discussions = db["discussions"]
 
 # ---- Indexes (idempotent) ----
 users.create_index([("email", ASCENDING)], unique=True)
@@ -54,6 +72,12 @@ equipment_col.create_index([("title", "text"), ("features", "text")])
 notifications.create_index([("userId", ASCENDING), ("createdAt", DESCENDING)])
 bookings.create_index([("equipmentId", ASCENDING), ("createdAt", DESCENDING)])
 
+# AI session indexes
+ai_sessions.create_index([("userId", ASCENDING), ("updatedAt", DESCENDING)])
+
+# NEW: forum indexes
+discussions.create_index([("createdAt", DESCENDING)])
+discussions.create_index([("title", "text"), ("text", "text"), ("category", "text")])
 
 # ---- Helpers ----
 def oid(x):
@@ -89,9 +113,11 @@ def serialize_user(u):
         "location": u.get("location"),                  # e.g., "Ludhiana, Punjab"
         "phone": u.get("phone"),
         "avatarUrl": u.get("avatarUrl"),
+        "preferredLanguage": u.get("preferredLanguage"),
+        "crops": u.get("crops"),
+        "soil": u.get("soil"),
         "createdAt": u.get("createdAt"),
         "joinedDate": human_month_year(u.get("createdAt")) or None,
-        # You can compute rating later; keep front-end fallback
     }
 
 def serialize_crop(doc):
@@ -137,6 +163,32 @@ def serialize_equipment(doc):
         "updatedAt": doc.get("updatedAt"),
     }
 
+def serialize_discussion(doc):
+    return {
+        "id": oid_str(doc.get("_id")),
+        "title": doc.get("title"),
+        "text": doc.get("text"),
+        "category": doc.get("category"),
+        "createdAt": doc.get("createdAt"),
+        "author": {
+            "id": oid_str((doc.get("author") or {}).get("id")),
+            "name": (doc.get("author") or {}).get("name"),
+        },
+        "replies": [
+            {
+                "id": oid_str(r.get("_id")),
+                "text": r.get("text"),
+                "createdAt": r.get("createdAt"),
+                "author": {
+                    "id": oid_str((r.get("author") or {}).get("id")),
+                    "name": (r.get("author") or {}).get("name"),
+                },
+            }
+            for r in (doc.get("replies") or [])
+        ],
+        "repliesCount": len(doc.get("replies") or []),
+    }
+
 def make_token(user_id, role):
     role_norm = (role or "").lower()
     payload = {
@@ -168,15 +220,79 @@ def token_required(fn):
         return fn(*args, **kwargs)
     return wrapper
 
+def token_optional(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        g.current_user = None
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            token = auth.split(" ", 1)[1]
+            try:
+                data = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+                uid = data["sub"]
+                user = users.find_one({"_id": ObjectId(uid)})
+                if user:
+                    g.current_user = user
+            except Exception:
+                # ignore token errors for optional auth
+                g.current_user = None
+        return fn(*args, **kwargs)
+    return wrapper
+
 def participants_hash(a, b):
     return "-".join(sorted([str(a), str(b)]))
 
+# ---------- AI helpers ----------
+GENERATION_CONFIG = {
+    "temperature": 0.6,
+    "top_p": 0.9,
+    "max_output_tokens": 1024
+}
+
+def build_system_prompt(profile: dict) -> str:
+    """Craft a farmer-personalized instruction for Gemini."""
+    name = (profile or {}).get("name") or "Farmer"
+    region = (profile or {}).get("location") or "India"
+    crops_list = (profile or {}).get("crops") or []
+    crops_txt = ", ".join(crops_list) if crops_list else "—"
+    soil = (profile or {}).get("soil") or {}
+    soil_desc = f"pH={soil.get('ph','?')}, type={soil.get('type','?')}"
+    lang = ((profile or {}).get("preferredLanguage") or "English").lower()
+
+    return f"""
+You are Farmunity's AI Farming Assistant.
+
+PERSONALIZATION
+- Farmer: {name}
+- Region: {region}
+- Typical crops: {crops_txt}
+- Soil: {soil_desc}
+- Preferred language: {lang}
+
+BEHAVIOR
+- Reply in the farmer's preferred language (use Hinglish if chosen).
+- Be practical for Indian agriculture (rain-fed realities, input costs, availability).
+- Consider season, soil pH/type, irrigation, and local practices in suggestions.
+- For fertilizers/pesticides: give active ingredient, dosage, interval, and safety notes.
+- Ask one clarifying question when information is insufficient.
+- Provide brief, actionable steps and a short checklist when helpful.
+""".strip()
+
+def ai_history_to_gemini(history):
+    """
+    Convert our history array to Gemini format.
+    history: [{role: 'user'|'assistant', 'content': '...'}]
+    """
+    out = []
+    for m in history or []:
+        role = "user" if m.get("role") == "user" else "model"
+        out.append({"role": role, "parts": [{"text": m.get("content","")}]})
+    return out
 
 # ---- Health ----
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
-
 
 # ---- Auth ----
 @app.post("/api/auth/signup")
@@ -204,6 +320,10 @@ def signup():
             "location": None,
             "phone": None,
             "avatarUrl": None,
+            # Optional personalization defaults
+            "preferredLanguage": "English",
+            "crops": [],
+            "soil": {},  # e.g., {"ph": 6.5, "type": "loamy"}
         }
         result = users.insert_one(doc)
         token = make_token(result.inserted_id, role)
@@ -238,7 +358,6 @@ def login():
 def me():
     return jsonify({"user": serialize_user(g.current_user)})
 
-
 # ---- User profile (update current user) ----
 @app.put("/api/users/me")
 @token_required
@@ -255,6 +374,14 @@ def update_me():
     if "avatarUrl" in body and isinstance(body["avatarUrl"], str):
         updates["avatarUrl"] = body["avatarUrl"].strip()
 
+    # NEW: personalization fields
+    if "preferredLanguage" in body and isinstance(body["preferredLanguage"], str):
+        updates["preferredLanguage"] = body["preferredLanguage"].strip()
+    if "crops" in body and isinstance(body["crops"], list):
+        updates["crops"] = [str(x).strip() for x in body["crops"] if str(x).strip()]
+    if "soil" in body and isinstance(body["soil"], dict):
+        updates["soil"] = body["soil"]
+
     if not updates:
         return jsonify({"error": "No valid fields to update"}), 400
 
@@ -262,14 +389,12 @@ def update_me():
     user = users.find_one({"_id": g.current_user["_id"]})
     return jsonify({"user": serialize_user(user)}), 200
 
-
 # ---- Protected sample ----
 @app.get("/api/secure/sample")
 @token_required
 def secure_sample():
     u = serialize_user(g.current_user)
     return jsonify({"message": f"Hello {u['name']}!", "role": u["role"]})
-
 
 # ---- CROPS: real-time from Mongo (protected) ----
 @app.get("/api/crops")
@@ -344,6 +469,7 @@ def create_crop():
             "category": (body.get("category") or "").lower() or None,
             "createdAt": datetime.utcnow(),
             "createdBy": g.current_user["_id"],  # seller/owner
+            "status": body.get("status"),        # optional
         }
     except Exception:
         return jsonify({"error": "Invalid payload"}), 400
@@ -352,22 +478,111 @@ def create_crop():
     doc["_id"] = result.inserted_id
     return jsonify({"item": serialize_crop(doc)}), 201
 
+# --- Inquiries helper (distinct buyers per crop) ---
+def inquiries_map_for_owner_crops(owner_id, crop_ids):
+    """
+    Returns { cropId(str): distinctBuyerCount(int) }.
+    A buyer is anyone != owner who sent >=1 message in a conversation with conversation.cropId == cropId.
+    """
+    crop_ids = [str(x) for x in crop_ids]
+    # only conversations that involve owner & are tied to a crop
+    convs = list(conversations.find({
+        "cropId": {"$in": crop_ids},
+        "participants": oid(owner_id)
+    }))
+    if not convs:
+        return {}
+    conv_to_crop = {str(c["_id"]): c.get("cropId") for c in convs}
+    conv_ids = list(conv_to_crop.keys())
+
+    msgs = messages_col.find({
+        "conversationId": {"$in": conv_ids},
+        "senderId": {"$ne": str(owner_id)}
+    })
+
+    seen = set()  # (cropId, senderId)
+    for m in msgs:
+        crop_id_for_msg = conv_to_crop.get(m["conversationId"])
+        if crop_id_for_msg:
+            seen.add((crop_id_for_msg, m["senderId"]))
+
+    out = defaultdict(int)
+    for crop_id, _sender in seen:
+        out[crop_id] += 1
+    return dict(out)
+
+# ---- Farmer's own crops (with inquiries & status) ----
+@app.get("/api/crops/mine")
+@token_required
+def my_crops():
+    uid = g.current_user["_id"]
+    docs = list(crops.find({"createdBy": uid}).sort("createdAt", DESCENDING))
+    crop_ids = [d["_id"] for d in docs]
+    inquiry_counts = inquiries_map_for_owner_crops(uid, crop_ids)
+
+    items = []
+    for d in docs:
+        s = serialize_crop(d)
+        status = d.get("status")
+        if not status:
+            # very simple derive from quantity if numeric available
+            qty_str = str(s.get("quantity", "")).lower()
+            try:
+                m = re.search(r"[\d.]+", qty_str)
+                qty_num = float(m.group(0)) if m else None
+            except Exception:
+                qty_num = None
+            status = "Active" if (qty_num is None or qty_num > 0) else "Sold"
+
+        items.append({
+            **s,
+            "quality": d.get("quality"),
+            "status": status,
+            "inquiries": int(inquiry_counts.get(str(d["_id"]), 0)),
+        })
+    return jsonify({"items": items})
+
+# ---- Delete crop (owner only) ----
+@app.delete("/api/crops/<id>")
+@token_required
+def delete_crop(id):
+    try:
+        doc = crops.find_one({"_id": oid(id)})
+    except Exception:
+        return jsonify({"error": "Invalid id"}), 400
+    if not doc:
+        return jsonify({"error": "Not found"}), 404
+    if doc.get("createdBy") != g.current_user["_id"]:
+        return jsonify({"error": "Forbidden"}), 403
+    crops.delete_one({"_id": doc["_id"]})
+    return jsonify({"ok": True})
+
+# (Optional) Realtime crops stream if Mongo change streams are available
+# @app.get("/api/crops/stream")
+# def crops_stream():
+#     def gen():
+#         try:
+#             with crops.watch(full_document='updateLookup') as stream:
+#                 for change in stream:
+#                     payload = serialize_crop(to_jsonable(change.get("fullDocument", {})))
+#                     yield f"data: {json.dumps(payload)}\n\n"
+#         except Exception:
+#             yield "event: error\ndata: {}\n\n"
+#     return Response(gen(), mimetype="text/event-stream")
 
 # ---- Dashboard summary (protected) ----
 @app.get("/api/dashboard/summary")
 @token_required
 def dashboard_summary():
-    # Basic example: you can scope by user later
     uid = g.current_user["_id"]
     my_crops = crops.count_documents({"createdBy": uid})
-    earnings = 145230   # TODO: compute from orders if you add them
+    earnings = 145230   # placeholder until you implement orders
     equipment_rented = equipment_col.count_documents({"owner.userId": uid})
     return jsonify({
         "cropsCount": my_crops,
         "earnings": earnings,
         "equipmentRented": equipment_rented
     })
-
 
 # =============================
 #         EQUIPMENT
@@ -415,7 +630,6 @@ def list_equipment():
         if max_price is not None: pr["$lte"] = max_price
         filt["price.day"] = pr
     if q:
-        # supports text index; fallback to regex if you prefer
         filt["$text"] = {"$search": q}
 
     # sort
@@ -490,6 +704,20 @@ def create_equipment():
     res = equipment_col.insert_one(doc)
     doc["_id"] = res.inserted_id
     return jsonify({"item": serialize_equipment(to_jsonable(doc))}), 201
+
+# --- My equipment (owner-only list) ---
+@app.get("/api/equipment/mine")
+@token_required
+def my_equipment():
+    uid = g.current_user["_id"]
+    cur = equipment_col.find({"owner.userId": uid}).sort("updatedAt", DESCENDING)
+    items = []
+    for doc in cur:
+        shaped = serialize_equipment(to_jsonable(doc))
+        # Present a friendly status chip
+        shaped["status"] = "Active" if doc.get("available", True) else "Upcoming"
+        items.append(shaped)
+    return jsonify({"items": items})
 
 # Update equipment (owner only)
 @app.put("/api/equipment/<id>")
@@ -792,6 +1020,412 @@ def chat_send_message():
         "text": doc["text"],
         "createdAt": doc["createdAt"],
     }})
+
+# =============================
+#     COMMUNITY DISCUSSIONS
+# =============================
+@app.get("/api/forum/discussions")
+def forum_list():
+    """
+    Public list of discussions.
+    Query params:
+      q (search), limit (default 20, <=100), skip (default 0)
+    """
+    q = (request.args.get("q") or "").strip()
+    try:
+        limit = min(100, max(1, int(request.args.get("limit", 20))))
+    except Exception:
+        limit = 20
+    try:
+        skip = max(0, int(request.args.get("skip", 0)))
+    except Exception:
+        skip = 0
+
+    filt = {}
+    if q:
+        # Prefer $text if index exists
+        filt["$text"] = {"$search": q}
+
+    cursor = discussions.find(filt).sort("createdAt", DESCENDING).skip(skip).limit(limit)
+    items = [serialize_discussion(to_jsonable(d)) for d in cursor]
+    total = discussions.count_documents(filt)
+    return jsonify({"items": items, "total": total, "skip": skip, "limit": limit})
+
+@app.get("/api/forum/discussions/<id>")
+def forum_get(id):
+    try:
+        doc = discussions.find_one({"_id": oid(id)})
+    except Exception:
+        return jsonify({"error": "Invalid id"}), 400
+    if not doc:
+        return jsonify({"error": "Not found"}), 404
+    return jsonify({"item": serialize_discussion(to_jsonable(doc))})
+
+@app.post("/api/forum/discussions")
+@token_required
+def forum_create():
+    """
+    Create a discussion.
+    Body: { title, text, category? }
+    """
+    body = request.get_json(force=True)
+    title = (body.get("title") or "").strip()
+    text = (body.get("text") or "").strip()
+    category = (body.get("category") or "").strip()
+
+    if not title or not text:
+        return jsonify({"error": "title and text are required"}), 400
+
+    doc = {
+        "title": title,
+        "text": text,
+        "category": category or None,
+        "createdAt": datetime.utcnow(),
+        "author": {"id": g.current_user["_id"], "name": g.current_user.get("name")},
+        "replies": [],
+    }
+    res = discussions.insert_one(doc)
+    doc["_id"] = res.inserted_id
+    return jsonify({"item": serialize_discussion(to_jsonable(doc))}), 201
+
+@app.post("/api/forum/discussions/<id>/replies")
+@token_required
+def forum_reply(id):
+    """
+    Add a reply to a discussion.
+    Body: { text }
+    """
+    body = request.get_json(force=True)
+    text = (body.get("text") or "").strip()
+    if not text:
+        return jsonify({"error": "text is required"}), 400
+
+    try:
+        base = discussions.find_one({"_id": oid(id)})
+    except Exception:
+        return jsonify({"error": "Invalid id"}), 400
+    if not base:
+        return jsonify({"error": "Discussion not found"}), 404
+
+    reply_doc = {
+        "_id": ObjectId(),
+        "text": text,
+        "createdAt": datetime.utcnow(),
+        "author": {"id": g.current_user["_id"], "name": g.current_user.get("name")},
+    }
+
+    discussions.update_one(
+        {"_id": base["_id"]},
+        {"$push": {"replies": reply_doc}}
+    )
+
+    reply_out = {
+        "id": oid_str(reply_doc["_id"]),
+        "text": reply_doc["text"],
+        "createdAt": reply_doc["createdAt"],
+        "author": {
+            "id": oid_str(reply_doc["author"]["id"]),
+            "name": reply_doc["author"]["name"],
+        },
+    }
+    return jsonify({"reply": reply_out}), 201
+
+# =============================
+#      AI ASSISTANT (Gemini)
+# =============================
+@app.post("/api/ai/ask")
+@token_required
+def ai_ask():
+    """
+    Body: { "message": str, "sessionId": optional str }
+    Returns: { "sessionId": str, "reply": str }
+    """
+    if not GOOGLE_API_KEY:
+        return jsonify({"error": "GOOGLE_API_KEY not configured on server"}), 500
+
+    body = request.get_json(force=True)
+    text = (body.get("message") or "").strip()
+    session_id = body.get("sessionId")
+
+    if not text:
+        return jsonify({"error": "message is required"}), 400
+
+    # Load/create session
+    if session_id:
+        try:
+            session = ai_sessions.find_one({"_id": oid(session_id), "userId": g.current_user["_id"]})
+        except Exception:
+            return jsonify({"error": "Invalid sessionId"}), 400
+    else:
+        session = None
+
+    if not session:
+        session_doc = {
+            "userId": g.current_user["_id"],
+            "messages": [],  # [{role, content, ts}]
+            "createdAt": datetime.utcnow(),
+            "updatedAt": datetime.utcnow(),
+            "title": None
+        }
+        ins = ai_sessions.insert_one(session_doc)
+        session_id = oid_str(ins.inserted_id)
+        session = ai_sessions.find_one({"_id": ins.inserted_id})
+
+    # Append user message
+    ai_sessions.update_one(
+        {"_id": session["_id"]},
+        {"$push": {"messages": {"role": "user", "content": text, "ts": datetime.utcnow()}},
+         "$set": {"updatedAt": datetime.utcnow(),
+                  "title": session.get("title") or (text[:50] + ("..." if len(text) > 50 else ""))}}
+    )
+
+    # Build system prompt + history
+    system_prompt = build_system_prompt(g.current_user)
+    model = genai.GenerativeModel(model_name=GEMINI_MODEL, system_instruction=system_prompt)
+    history = ai_sessions.find_one({"_id": session["_id"]})["messages"]
+    g_history = ai_history_to_gemini(history)
+
+    try:
+        chat = model.start_chat(history=g_history)
+        resp = chat.send_message(text, generation_config=GENERATION_CONFIG)
+        answer = (resp.text or "").strip()
+    except Exception as e:
+        return jsonify({"error": f"Gemini error: {e}"}), 500
+
+    # Save assistant reply
+    ai_sessions.update_one(
+        {"_id": session["_id"]},
+        {"$push": {"messages": {"role": "assistant", "content": answer, "ts": datetime.utcnow()}},
+         "$set": {"updatedAt": datetime.utcnow()}}
+    )
+
+    return jsonify({"sessionId": str(session["_id"]), "reply": answer})
+
+def _owm_request(endpoint, params):
+    if not OPENWEATHER_API_KEY:
+        raise RuntimeError("OPENWEATHER_API_KEY missing")
+    url = f"https://api.openweathermap.org/data/2.5/{endpoint}"
+    p = {"appid": OPENWEATHER_API_KEY, "units": "metric", **params}
+    r = requests.get(url, params=p, timeout=12)
+    r.raise_for_status()
+    return r.json()
+
+def _resolve_current(lat=None, lon=None, q=None):
+    if lat is not None and lon is not None:
+        return _owm_request("weather", {"lat": float(lat), "lon": float(lon)})
+    elif q:
+        return _owm_request("weather", {"q": q})
+    else:
+        raise ValueError("Provide lat/lon or q")
+
+def _resolve_forecast(lat=None, lon=None, q=None):
+    if lat is not None and lon is not None:
+        return _owm_request("forecast", {"lat": float(lat), "lon": float(lon)})
+    elif q:
+        return _owm_request("forecast", {"q": q})
+    else:
+        raise ValueError("Provide lat/lon or q")
+
+def _aggregate_3days(forecast_json):
+    """
+    Input: OpenWeather 5-day/3-hour forecast JSON
+    Output: list of up to 3 day summaries [{date, min, max, rain_mm, main, desc}]
+    """
+    from collections import defaultdict, Counter
+    buckets = defaultdict(list)
+    for it in forecast_json.get("list", []):
+        dt_txt = it.get("dt_txt")  # 'YYYY-MM-DD HH:MM:SS'
+        if not dt_txt:
+            continue
+        day = dt_txt.split(" ")[0]
+        buckets[day].append(it)
+
+    out = []
+    today = datetime.utcnow().date()
+    for i, day in enumerate(sorted(buckets.keys())):
+        # Skip "today" partial day; take next 3 calendar days total including today if early enough
+        d_date = datetime.strptime(day, "%Y-%m-%d").date()
+        if d_date < today:
+            continue
+        temps = [x["main"]["temp"] for x in buckets[day] if x.get("main")]
+        rains = []
+        for x in buckets[day]:
+            # rain can be {'3h': mm}
+            mm = (x.get("rain") or {}).get("3h", 0.0)
+            if isinstance(mm, (int, float)):
+                rains.append(float(mm))
+        mains = [ (x.get("weather") or [{}])[0].get("main") for x in buckets[day] ]
+        descs = [ (x.get("weather") or [{}])[0].get("description") for x in buckets[day] ]
+        if not temps:
+            continue
+        main = Counter([m for m in mains if m]).most_common(1)[0][0] if mains else None
+        desc = Counter([d for d in descs if d]).most_common(1)[0][0] if descs else None
+        out.append({
+            "date": day,
+            "min": round(min(temps), 1),
+            "max": round(max(temps), 1),
+            "rain_mm": round(sum(rains), 1) if rains else 0.0,
+            "main": main,
+            "desc": desc
+        })
+        if len(out) == 3:
+            break
+    return out
+
+def _format_location_from_owm(cur):
+    name = cur.get("name")
+    sys = cur.get("sys") or {}
+    country = sys.get("country")
+    coord = cur.get("coord") or {}
+    return {
+        "display": ", ".join([x for x in [name, country] if x]),
+        "lat": coord.get("lat"),
+        "lon": coord.get("lon"),
+        "name": name,
+        "country": country
+    }
+
+@app.get("/api/ai/sessions")
+@token_required
+def ai_list_sessions():
+    cur = ai_sessions.find({"userId": g.current_user["_id"]}).sort("updatedAt", DESCENDING).limit(50)
+    out = []
+    for s in cur:
+        out.append({
+            "id": oid_str(s["_id"]),
+            "title": s.get("title") or "AI Session",
+            "createdAt": s.get("createdAt"),
+            "updatedAt": s.get("updatedAt"),
+            "messagesCount": len(s.get("messages", [])),
+        })
+    return jsonify({"sessions": out})
+
+@app.get("/api/ai/sessions/<sid>")
+@token_required
+def ai_get_session(sid):
+    try:
+        s = ai_sessions.find_one({"_id": oid(sid), "userId": g.current_user["_id"]})
+    except Exception:
+        return jsonify({"error": "Invalid id"}), 400
+    if not s:
+        return jsonify({"error": "Not found"}), 404
+    msgs = [{"role": m.get("role"), "content": m.get("content"), "ts": m.get("ts")} for m in s.get("messages", [])]
+    return jsonify({
+        "id": oid_str(s["_id"]),
+        "title": s.get("title") or "AI Session",
+        "createdAt": s.get("createdAt"),
+        "updatedAt": s.get("updatedAt"),
+        "messages": msgs
+    })
+
+@app.delete("/api/ai/sessions/<sid>")
+@token_required
+def ai_delete_session(sid):
+    try:
+        s = ai_sessions.find_one({"_id": oid(sid), "userId": g.current_user["_id"]})
+    except Exception:
+        return jsonify({"error": "Invalid id"}), 400
+    if not s:
+        return jsonify({"error": "Not found"}), 404
+    ai_sessions.delete_one({"_id": s["_id"]})
+    return jsonify({"ok": True})
+
+# =============================
+#           WEATHER
+# =============================
+
+@app.get("/api/weather/now")
+def weather_now():
+    """
+    Query: lat, lon OR q="City,CountryCode"
+    Returns current weather + 3-day aggregated forecast.
+    """
+    lat = request.args.get("lat")
+    lon = request.args.get("lon")
+    q = (request.args.get("q") or "").strip() or None
+
+    key = f"{lat},{lon}" if lat and lon else f"q:{q}"
+    
+    try:
+        cur = _resolve_current(lat, lon, q)
+        fc = _resolve_forecast(lat, lon, q)
+    except Exception as e:
+        return jsonify({"error": f"weather fetch failed: {e}"}), 502
+
+    location = _format_location_from_owm(cur)
+    w = (cur.get("weather") or [{}])[0]
+    main = cur.get("main") or {}
+    wind = cur.get("wind") or {}
+    rain = (cur.get("rain") or {}).get("1h") or (cur.get("rain") or {}).get("3h")  # may be None
+
+    current = {
+        "tempC": round(main.get("temp"), 1) if main.get("temp") is not None else None,
+        "feelsLikeC": round(main.get("feels_like"), 1) if main.get("feels_like") is not None else None,
+        "humidity": main.get("humidity"),
+        "pressure": main.get("pressure"),
+        "wind_mps": wind.get("speed"),
+        "clouds": (cur.get("clouds") or {}).get("all"),
+        "description": w.get("description"),
+        "icon": w.get("icon"),
+        "rain_mm": rain if isinstance(rain, (int, float)) else 0.0,
+    }
+
+    forecast3d = _aggregate_3days(fc)
+
+    payload = {
+        "location": location,
+        "current": current,
+        "forecast3d": forecast3d,
+        "fetchedAt": datetime.utcnow().isoformat()
+    }
+
+    return jsonify(payload)
+
+@app.get("/api/weather/advisory")
+@token_optional
+def weather_advisory():
+    """
+    Builds a short, actionable farming advisory using Gemini
+    from the next 3 days of forecast.
+    Query: lat, lon OR q
+    """
+    lat = request.args.get("lat")
+    lon = request.args.get("lon")
+    q = (request.args.get("q") or "").strip() or None
+
+    # First, get the forecast (reuse logic)
+    try:
+        fc = _resolve_forecast(lat, lon, q)
+        cur = _resolve_current(lat, lon, q)
+    except Exception as e:
+        return jsonify({"error": f"weather fetch failed: {e}"}), 502
+
+    location = _format_location_from_owm(cur)
+    forecast3d = _aggregate_3days(fc)
+
+    # Build prompt for Gemini (personalized)
+    system_prompt = build_system_prompt(g.current_user)
+    model = genai.GenerativeModel(model_name=GEMINI_MODEL, system_instruction=system_prompt)
+
+    prompt = (
+        "You are generating a SHORT, practical farming advisory for the next 3 days based on weather.\n"
+        "Keep it in 3–5 bullets, very actionable (irrigation, spraying, harvesting, sowing, protection).\n"
+        "Use the farmer's preferred language. Mention units in °C and mm. Avoid fluff.\n\n"
+        f"Location: {location.get('display')}\n"
+        f"Forecast (next 3 days JSON): {json.dumps(forecast3d, ensure_ascii=False)}\n"
+    )
+
+    try:
+        resp = model.generate_content(prompt, generation_config=GENERATION_CONFIG)
+        advice = (resp.text or "").strip()
+    except Exception as e:
+        return jsonify({"error": f"Gemini error: {e}"}), 500
+
+    return jsonify({
+        "location": location,
+        "forecast3d": forecast3d,
+        "advisory": advice
+    })
 
 # ---- Main ----
 if __name__ == "__main__":

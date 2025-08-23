@@ -93,7 +93,8 @@ export const api = {
   // ===== User profile (protected) =====
   /**
    * Update currently logged-in user's profile
-   * @param {{name?:string, location?:string, phone?:string, avatarUrl?:string}} payload
+   * Supports: name, location, phone, avatarUrl, preferredLanguage, crops (array), soil (object)
+   * @param {Object} payload
    * @returns {Promise<{user: object}>}
    */
   updateProfile: (payload) =>
@@ -104,7 +105,7 @@ export const api = {
     }),
 
   // ===== Crops (protected) =====
-  // filters: { q, category, minPrice, maxPrice, limit, skip, sort, order }
+  // List (generic filters, protected)
   getCrops: (filters = {}) => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([k, v]) => {
@@ -112,6 +113,38 @@ export const api = {
     });
     const qs = params.toString() ? `?${params.toString()}` : "";
     return req(`/api/crops${qs}`, { headers: { ...authHeaders() } });
+  },
+
+  // Create a crop listing (expects: { farmer, crop, quantity, price, location, quality })
+  createCrop: (payload) =>
+    req("/api/crops", {
+      method: "POST",
+      headers: { ...authHeaders() },
+      body: JSON.stringify(payload),
+    }),
+
+  // Get only current farmer's crops (with inquiries/status)
+  getMyCrops: () =>
+    req("/api/crops/mine", { headers: { ...authHeaders() } }),
+
+  // Delete a crop (owner only)
+  deleteCrop: (id) =>
+    req(`/api/crops/${id}`, {
+      method: "DELETE",
+      headers: { ...authHeaders() },
+    }),
+
+  // Optional realtime via SSE (if backend enabled)
+  openCropsStream(onMessage) {
+    const ev = new EventSource(`${API_URL}/api/crops/stream`);
+    ev.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        onMessage?.(data);
+      } catch {}
+    };
+    ev.onerror = () => ev.close();
+    return () => ev.close();
   },
 
   // ===== Equipment (public list + protected CRUD) =====
@@ -174,6 +207,10 @@ export const api = {
     return () => ev.close();
   },
 
+  // ===== Equipment (mine, protected) =====
+  getMyEquipment: () =>
+    req("/api/equipment/mine", { headers: { ...authHeaders() } }),
+
   // ===== Dashboard (protected) =====
   getDashboardSummary: () =>
     req("/api/dashboard/summary", { headers: { ...authHeaders() } }),
@@ -204,6 +241,86 @@ export const api = {
       headers: { ...authHeaders() },
       body: JSON.stringify({ conversationId, text }),
     }),
-};
+
+  // ===== AI Assistant (Gemini-backed, protected) =====
+  /**
+   * Ask the AI assistant (Gemini). If you pass a sessionId, conversation is continued.
+   * Returns: { sessionId, reply }
+   */
+  aiAsk: ({ message, sessionId = null }) =>
+    req("/api/ai/ask", {
+      method: "POST",
+      headers: { ...authHeaders() },
+      body: JSON.stringify({ message, sessionId }),
+    }),
+
+  /** List my AI chat sessions (latest first) */
+  aiListSessions: () =>
+    req("/api/ai/sessions", { headers: { ...authHeaders() } }),
+
+  /** Get a specific AI session with messages */
+  aiGetSession: (sid) =>
+    req(`/api/ai/sessions/${sid}`, { headers: { ...authHeaders() } }),
+
+  /** Delete an AI session */
+  aiDeleteSession: (sid) =>
+    req(`/api/ai/sessions/${sid}`, {
+      method: "DELETE",
+      headers: { ...authHeaders() },
+    }),
+
+  // ===== Forum / Community =====
+  forumList: (params = {}) => {
+    const sp = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== "") sp.append(k, v);
+    });
+    const qs = sp.toString() ? `?${sp.toString()}` : "";
+    return req(`/api/forum/discussions${qs}`);
+  },
+
+  forumCreate: ({ title, text, category }) =>
+    req("/api/forum/discussions", {
+      method: "POST",
+      headers: { ...authHeaders() },
+      body: JSON.stringify({ title, text, category }),
+    }),
+
+  forumReply: (id, { text }) =>
+    req(`/api/forum/discussions/${id}/replies`, {
+      method: "POST",
+      headers: { ...authHeaders() },
+      body: JSON.stringify({ text }),
+    }),
+
+  // ===== Weather =====
+  weatherNow: ({ lat, lon, q } = {}) => {
+    const sp = new URLSearchParams();
+    if (lat != null) sp.append("lat", lat);
+    if (lon != null) sp.append("lon", lon);
+    if (q) sp.append("q", q);
+    const qs = sp.toString() ? `?${sp.toString()}` : "";
+    return req(`/api/weather/now${qs}`);
+  },
+
+  weatherAdvisory: ({ lat, lon, q } = {}) =>
+    req(
+      `/api/weather/advisory${
+        (() => {
+          const sp = new URLSearchParams();
+          if (lat != null) sp.append("lat", lat);
+          if (lon != null) sp.append("lon", lon);
+          if (q) sp.append("q", q);
+          const qs = sp.toString() ? `?${sp.toString()}` : "";
+          return qs;
+        })()
+      }`,
+      { headers: { ...authHeaders() } }
+    ),
+
+    // ===== Notifications (protected) =====
+    myNotifications: () =>
+      req("/api/notifications", { headers: { ...authHeaders() } }),
+  };
 
 export default api;

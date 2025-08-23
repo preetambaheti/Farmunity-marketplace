@@ -282,13 +282,6 @@ export default function Marketplace({ onUnauthorized }) {
             ))
           )}
         </div>
-
-        {/* Load More Button (optional pagination later) */}
-        <div className="text-center mt-8">
-          <button className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg transition-colors">
-            Load More Listings
-          </button>
-        </div>
       </div>
 
       {/* Chat modal */}

@@ -120,45 +120,6 @@ export default function Homepage({ onNavigate }) {
             </button>
           </div>
         </div>
-
-        {/* Trust Indicators */}
-        <div className="bg-green-50 rounded-2xl p-8">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Trusted by 50,000+ Farmers</h3>
-            <p className="text-gray-600">Join India's fastest-growing farming community</p>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900">50K+</div>
-              <div className="text-sm text-gray-600">Active Farmers</div>
-            </div>
-            <div>
-              <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                <TrendingUp className="h-6 w-6 text-white" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900">₹500Cr</div>
-              <div className="text-sm text-gray-600">Trade Volume</div>
-            </div>
-            <div>
-              <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Shield className="h-6 w-6 text-white" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900">100%</div>
-              <div className="text-sm text-gray-600">Secure Payments</div>
-            </div>
-            <div>
-              <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Heart className="h-6 w-6 text-white" />
-              </div>
-              <div className="text-2xl font-bold text-gray-900">4.8/5</div>
-              <div className="text-sm text-gray-600">User Rating</div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

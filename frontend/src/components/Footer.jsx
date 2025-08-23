@@ -125,7 +125,6 @@ export default function Footer({ onNavigate }) {
                 <button className="block text-green-200 hover:text-white transition-colors text-sm">English</button>
                 <button className="block text-green-200 hover:text-white transition-colors text-sm">हिंदी</button>
                 <button className="block text-green-200 hover:text-white transition-colors text-sm">ಕನ್ನಡ</button>
-                <button className="block text-green-200 hover:text-white transition-colors text-sm">தமிழ்</button>
               </div>
             </div>
             <div className="space-y-2">
@@ -144,7 +143,7 @@ export default function Footer({ onNavigate }) {
         {/* Bottom Bar */}
         <div className="border-t border-green-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <div className="text-green-200 text-sm">
-            © 2024 Farmunity. All rights reserved.
+            © 2025 Farmunity. All rights reserved.
           </div>
           <div className="flex space-x-6 text-sm text-green-200 mt-4 md:mt-0">
             <button className="hover:text-white transition-colors">Privacy Policy</button>
