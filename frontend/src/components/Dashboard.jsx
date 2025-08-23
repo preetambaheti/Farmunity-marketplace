@@ -1,112 +1,200 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import NotificationBell from "../components/NotificationBell";
+import {
+  User,
+  Star,
+  Trash2,
+  X,
+  Plus,
+} from "lucide-react";
 import { api, getAuth } from "../services/api";
-import { User, TrendingUp, Package, Calendar, Star, Eye, Edit, Trash2, X } from "lucide-react";
 
 export default function Dashboard() {
-  const navigate = useNavigate();
+  const me = getAuth()?.user || null;
+  const isFarmer = me?.role === "farmer";
 
-  // ===== Auth & Role Gate =====
-  const [me, setMe] = useState(() => getAuth()?.user || null);
-  const isFarmer = useMemo(() => me?.role === "farmer", [me]);
-
-  useEffect(() => {
-    // If you keep an access token, try to refresh user info from backend
-    (async () => {
-      try {
-        const fresh = await api.me();            // expects { user: {...} }
-        if (fresh?.user) setMe(fresh.user);
-      } catch {
-        /* ignore; fall back to local auth */
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (!me) return navigate("/login");          // not logged in
-    if (!isFarmer) return navigate("/");         // not allowed
-  }, [me, isFarmer, navigate]);
-
-  if (!me || !isFarmer) return null;             // short-circuit during redirects
-
-  // ===== Demo / Fallback numbers until you wire real data =====
   const [metrics, setMetrics] = useState({
     totalSales: "₹12,50,000",
     completedOrders: 45,
-    totalListings: 12,
-    rating: me.rating ?? 4.8,
+    totalListings: 0,
+    rating: 4.8,
   });
 
-  // OPTIONAL: poll live metrics from your backend (uncomment when endpoint ready)
-  // useEffect(() => {
-  //   let t;
-  //   const pull = async () => {
-  //     try {
-  //       const data = await api.dashboardMetrics(); // { totalSales, completedOrders, totalListings, rating }
-  //       setMetrics((m) => ({ ...m, ...data }));
-  //     } catch {}
-  //     t = setTimeout(pull, 10000);
-  //   };
-  //   pull();
-  //   return () => clearTimeout(t);
-  // }, []);
+  // ========== CROPS (live) ==========
+  const [crops, setCrops] = useState([]);
+  const [loadingCrops, setLoadingCrops] = useState(true);
 
-  // ===== Edit Profile Modal =====
-  const [showEdit, setShowEdit] = useState(false);
+  async function pullCrops() {
+    try {
+      const data = await api.getMyCrops();
+      const items = data?.items || [];
+      setCrops(items);
+      setMetrics((m) => ({ ...m, totalListings: items.length }));
+    } catch {}
+    setLoadingCrops(false);
+  }
+
+  useEffect(() => {
+    pullCrops(); // initial
+    const t = setInterval(pullCrops, 8000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Add Listing (crop) modal
+  const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState({
-    name: me?.name || "",
+    crop: "",
+    quantity: "",
+    price: "",
+    quality: "A",
     location: me?.location || "",
-    phone: me?.phone || "",
   });
   useEffect(() => {
-    setForm({
-      name: me?.name || "",
-      location: me?.location || "",
-      phone: me?.phone || "",
-    });
-  }, [me]);
+    setForm((f) => ({ ...f, location: me?.location || "" }));
+  }, [me?.location]);
 
-  const onSaveProfile = async (e) => {
+  const canSubmitNew =
+    form.crop.trim() &&
+    form.quantity.trim() &&
+    String(form.price).trim() &&
+    form.quality.trim() &&
+    (me?.location || form.location.trim());
+
+  async function handleCreate(e) {
     e.preventDefault();
+    if (!canSubmitNew) return;
     try {
-      const updated = await api.updateProfile({
-        name: form.name,
-        location: form.location,
-        phone: form.phone,
-      }); // expects { user: {...} }
-      const user = updated?.user || updated;
-      setMe((m) => ({ ...m, ...user }));
-      // also refresh localStorage auth blob if you store it there
-      const raw = localStorage.getItem("auth");
-      if (raw) {
-        const blob = JSON.parse(raw);
-        localStorage.setItem("auth", JSON.stringify({ ...blob, user: { ...blob.user, ...user } }));
-      }
-      setShowEdit(false);
+      await api.createCrop({
+        farmer: me?.name || "Farmer",
+        crop: form.crop.trim(),
+        quantity: form.quantity.trim(),
+        price: Number(form.price),
+        location: me?.location || form.location.trim(),
+        quality: form.quality.trim(),
+      });
+      setShowNew(false);
+      setForm({
+        crop: "",
+        quantity: "",
+        price: "",
+        quality: "A",
+        location: me?.location || "",
+      });
+      pullCrops();
     } catch (err) {
-      alert(err?.message || "Failed to update profile");
+      alert(err?.message || "Failed to create listing");
     }
-  };
+  }
 
-  // ===== Demo listings (keep your existing) =====
-  const activeCropListings = [
-    { id: 1, crop: "Organic Wheat", quantity: "500 quintals", price: 2200, views: 156, inquiries: 8, status: "Active" },
-    { id: 2, crop: "Basmati Rice", quantity: "300 quintals", price: 1900, views: 89, inquiries: 5, status: "Active" },
-    { id: 3, crop: "Fresh Tomatoes", quantity: "100 quintals", price: 3400, views: 234, inquiries: 12, status: "Sold" },
-  ];
+  async function handleDeleteCrop(id) {
+    if (!window.confirm("Delete this crop listing?")) return;
+    try {
+      await api.deleteCrop(id);
+      setCrops((prev) => prev.filter((c) => c.id !== id));
+      setMetrics((m) => ({
+        ...m,
+        totalListings: Math.max(0, (m.totalListings || 0) - 1),
+      }));
+    } catch (err) {
+      alert(err?.message || "Failed to delete");
+    }
+  }
 
-  const equipmentRentals = [
-    { id: 1, equipment: "John Deere Tractor", type: "Rented Out", duration: "3 days", earnings: "₹3,600", status: "Active" },
-    { id: 2, equipment: "Rice Harvester", type: "Booked", duration: "2 days", cost: "₹5,000", status: "Upcoming" },
-  ];
+  // ========== EQUIPMENT (live) ==========
+  const [myEquip, setMyEquip] = useState([]);
+  const [eqLoading, setEqLoading] = useState(true);
+
+  async function pullEquipment() {
+    try {
+      const data = await api.getMyEquipment();
+      setMyEquip(data?.items || []);
+    } catch {}
+    setEqLoading(false);
+  }
+
+  useEffect(() => {
+    pullEquipment(); // initial
+    const t = setInterval(pullEquipment, 8000);
+    const stop = api.openEquipmentStream(() => pullEquipment());
+    return () => {
+      clearInterval(t);
+      stop?.();
+    };
+  }, []);
+
+  // Add Equipment modal
+  const [showEqNew, setShowEqNew] = useState(false);
+  const [eqForm, setEqForm] = useState({
+    title: "",
+    priceDay: "",
+    priceWeek: "",
+    features: "", // comma-separated
+    status: "Active", // Active | Upcoming
+  });
+
+  const eqCanSubmit =
+    eqForm.title.trim() &&
+    (String(eqForm.priceDay).trim() || String(eqForm.priceWeek).trim());
+
+  async function handleCreateEquipment(e) {
+    e.preventDefault();
+    if (!eqCanSubmit) return;
+
+    const payload = {
+      title: eqForm.title.trim(),
+      category: "Other",
+      features: eqForm.features
+        ? eqForm.features.split(",").map((s) => s.trim()).filter(Boolean)
+        : [],
+      available: eqForm.status === "Active",
+      price: {
+        day: eqForm.priceDay ? Number(eqForm.priceDay) : null,
+        week: eqForm.priceWeek ? Number(eqForm.priceWeek) : null,
+      },
+      location: {},
+    };
+
+    try {
+      await api.createEquipment(payload);
+      setShowEqNew(false);
+      setEqForm({
+        title: "",
+        priceDay: "",
+        priceWeek: "",
+        features: "",
+        status: "Active",
+      });
+      pullEquipment();
+    } catch (err) {
+      alert(err?.message || "Failed to add equipment");
+    }
+  }
+
+  // NEW: delete equipment
+  async function handleDeleteEquipment(id) {
+    if (!window.confirm("Delete this equipment item?")) return;
+    try {
+      await api.deleteEquipment(id);
+      // optimistic UI update
+      setMyEquip((prev) => prev.filter((e) => e.id !== id));
+    } catch (err) {
+      alert(err?.message || "Failed to delete equipment");
+    }
+  }
+
+  if (!isFarmer) return null; // also route-guarded
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
+        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Farmer Dashboard</h1>
-          <p className="text-gray-600">Manage your crops, equipment, and track your farming business</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Farmer Dashboard
+          </h1>
+          <p className="text-gray-600">
+            Manage your crops, equipment, and track your farming business
+          </p>
         </div>
 
         {/* Profile Card */}
@@ -116,75 +204,39 @@ export default function Dashboard() {
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
                 <User className="h-10 w-10 text-green-600" />
               </div>
+
               <div className="flex-1">
-                <h2 className="text-2xl font-semibold text-gray-900 mb-1">{me?.name || "Farmer"}</h2>
-                <p className="text-gray-600 mb-2">{me?.location || "Add your location"}</p>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-1">
+                  {me?.name}
+                </h2>
+                <p className="text-gray-600 mb-2">
+                  {me?.location || "Add your location in Edit Profile"}
+                </p>
                 <div className="flex items-center gap-4 text-sm">
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium">{Number(metrics.rating).toFixed(1)}</span>
+                    <span className="font-medium">
+                      {Number(metrics.rating).toFixed(1)}
+                    </span>
                   </div>
-                  <span className="text-gray-500">Member since {me?.joinedDate || "—"}</span>
+                  <span className="text-gray-500">
+                    Member since {me?.joinedDate || "—"}
+                  </span>
                 </div>
               </div>
-              <button
-                onClick={() => setShowEdit(true)}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                Edit Profile
-              </button>
-            </div>
-          </div>
-        </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{metrics.totalSales}</div>
-                <div className="text-sm text-gray-600">Total Sales</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Package className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{metrics.completedOrders}</div>
-                <div className="text-sm text-gray-600">Completed Orders</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{metrics.totalListings}</div>
-                <div className="text-sm text-gray-600">Active Listings</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Star className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {Number(metrics.rating).toFixed(1)}
-                </div>
-                <div className="text-sm text-gray-600">Rating</div>
+              {/* Right controls: Notifications + Edit Profile */}
+              <div className="flex items-center gap-3">
+                <NotificationBell />
+                <button
+                  onClick={() => {
+                    const el = document.getElementById("open-edit-profile");
+                    el?.click?.();
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Edit Profile
+                </button>
               </div>
             </div>
           </div>
@@ -194,8 +246,14 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-900">Active Crop Listings</h2>
-              <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Active Crop Listings
+              </h2>
+              <button
+                onClick={() => setShowNew(true)}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
                 Add New Listing
               </button>
             </div>
@@ -205,147 +263,408 @@ export default function Dashboard() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Crop</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price/Qt</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inquiries</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Crop
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Quantity
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Price/Qt
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Quality
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Inquiries
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
+
               <tbody className="bg-white divide-y divide-gray-200">
-                {activeCropListings.map((listing) => (
-                  <tr key={listing.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{listing.crop}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600">{listing.quantity}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">₹{listing.price.toLocaleString()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1 text-gray-600">
-                        <Eye className="h-4 w-4" />
-                        {listing.views}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-600">{listing.inquiries}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs rounded-full ${
-                          listing.status === "Active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {listing.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex gap-2">
-                        <button className="text-blue-600 hover:text-blue-700">
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button className="text-red-600 hover:text-red-700">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
+                {loadingCrops ? (
+                  <tr>
+                    <td className="px-6 py-6 text-gray-500" colSpan={7}>
+                      Loading...
                     </td>
                   </tr>
-                ))}
+                ) : crops.length === 0 ? (
+                  <tr>
+                    <td className="px-6 py-6 text-gray-500" colSpan={7}>
+                      No listings yet. Click “Add New Listing”.
+                    </td>
+                  </tr>
+                ) : (
+                  crops.map((listing) => (
+                    <tr key={listing.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
+                        {listing.crop}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                        {listing.quantity}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">
+                        ₹{Number(listing.price ?? 0).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                        {listing.quality || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                        {listing.inquiries ?? 0}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            listing.status === "Active"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {listing.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => handleDeleteCrop(listing.id)}
+                          className="text-red-600 hover:text-red-700"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Equipment Rentals */}
+        {/* Equipment Activity (REAL-TIME) */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Equipment Activity</h2>
+          <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Equipment Activity
+            </h2>
+            <button
+              onClick={() => setShowEqNew(true)}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+              title="Add item"
+            >
+              <Plus className="h-4 w-4" />
+              Add item
+            </button>
           </div>
 
           <div className="p-6">
-            <div className="space-y-4">
-              {equipmentRentals.map((rental) => (
-                <div key={rental.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <h3 className="font-medium text-gray-900">{rental.equipment}</h3>
-                    <p className="text-sm text-gray-600">
-                      {rental.type} • {rental.duration}
-                    </p>
+            {eqLoading ? (
+              <div className="text-gray-500">Loading...</div>
+            ) : myEquip.length === 0 ? (
+              <div className="text-gray-500">
+                No equipment yet. Click “Add item”.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {myEquip.map((it) => (
+                  <div
+                    key={it.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                  >
+                    {/* Left: title + features */}
+                    <div className="min-w-0 pr-4">
+                      <h3 className="font-medium text-gray-900 truncate">
+                        {it.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 truncate">
+                        {it.features && it.features.length > 0
+                          ? it.features.join(" • ")
+                          : "—"}
+                      </p>
+                    </div>
+
+                    {/* Right: price + status + actions */}
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="font-medium text-gray-900">
+                          {it.price?.day
+                            ? `₹${Number(it.price.day).toLocaleString()}/day`
+                            : ""}
+                          {it.price?.day && it.price?.week ? " · " : ""}
+                          {it.price?.week
+                            ? `₹${Number(it.price.week).toLocaleString()}/week`
+                            : ""}
+                        </div>
+                        <span
+                          className={`inline-block mt-1 px-2 py-1 text-xs rounded-full ${
+                            (it.status || "Active") === "Active"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-blue-100 text-blue-800"
+                          }`}
+                        >
+                          {it.status || (it.available ? "Active" : "Upcoming")}
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={() => handleDeleteEquipment(it.id)}
+                        className="text-red-600 hover:text-red-700 p-2 rounded"
+                        title="Delete equipment"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-medium text-gray-900">{rental.earnings || rental.cost}</div>
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full ${
-                        rental.status === "Active" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"
-                      }`}
-                    >
-                      {rental.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* ===== Edit Profile Modal ===== */}
-      {showEdit && (
+      {/* ===== New Crop Listing Modal ===== */}
+      {showNew && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowEdit(false)} />
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowNew(false)}
+          />
           <div className="relative bg-white w-full max-w-lg rounded-2xl shadow-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold">Edit Profile</h3>
-              <button onClick={() => setShowEdit(false)} className="p-2 rounded hover:bg-gray-100">
+              <h3 className="text-xl font-semibold">Add New Listing</h3>
+              <button
+                onClick={() => setShowNew(false)}
+                className="p-2 rounded hover:bg-gray-100"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={onSaveProfile} className="space-y-4">
+            <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Crop
+                </label>
                 <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  value={form.crop}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, crop: e.target.value }))
+                  }
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Your full name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                <input
-                  type="text"
-                  value={form.location}
-                  onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Village/City, District, State"
+                  placeholder="e.g., Basmati Rice"
                   required
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                <input
-                  type="tel"
-                  value={form.phone}
-                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Phone number"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Quantity
+                  </label>
+                  <input
+                    value={form.quantity}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, quantity: e.target.value }))
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="e.g., 500 quintals"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Price/qt
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={form.price}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, price: e.target.value }))
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="e.g., 2200"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Quality
+                  </label>
+                  <select
+                    value={form.quality}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, quality: e.target.value }))
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="A">A (Premium)</option>
+                    <option value="B">B (Good)</option>
+                    <option value="C">C (Standard)</option>
+                  </select>
+                </div>
+
+                {!me?.location && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Location
+                    </label>
+                    <input
+                      value={form.location}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, location: e.target.value }))
+                      }
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="Village/City, District, State"
+                      required
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowEdit(false)}
+                  onClick={() => setShowNew(false)}
                   className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
+                  disabled={!canSubmitNew}
+                  className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-60"
                 >
-                  Save Changes
+                  Create Listing
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===== Add Equipment Modal ===== */}
+      {showEqNew && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowEqNew(false)}
+          />
+          <div className="relative bg-white w-full max-w-lg rounded-2xl shadow-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold">Add Equipment</h3>
+              <button
+                onClick={() => setShowEqNew(false)}
+                className="p-2 rounded hover:bg-gray-100"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateEquipment} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Equipment Name
+                </label>
+                <input
+                  value={eqForm.title}
+                  onChange={(e) =>
+                    setEqForm((f) => ({ ...f, title: e.target.value }))
+                  }
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="e.g., John Deere Tractor"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Price / day
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={eqForm.priceDay}
+                    onChange={(e) =>
+                      setEqForm((f) => ({ ...f, priceDay: e.target.value }))
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="e.g., 1800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Price / week
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={eqForm.priceWeek}
+                    onChange={(e) =>
+                      setEqForm((f) => ({ ...f, priceWeek: e.target.value }))
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="e.g., 10000"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Features (comma-separated)
+                </label>
+                <input
+                  value={eqForm.features}
+                  onChange={(e) =>
+                    setEqForm((f) => ({ ...f, features: e.target.value }))
+                  }
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="e.g., 75 HP, 4WD, AC cabin"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  value={eqForm.status}
+                  onChange={(e) =>
+                    setEqForm((f) => ({ ...f, status: e.target.value }))
+                  }
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option>Active</option>
+                  <option>Upcoming</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEqNew(false)}
+                  className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!eqCanSubmit}
+                  className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-60"
+                >
+                  Add item
                 </button>
               </div>
             </form>
