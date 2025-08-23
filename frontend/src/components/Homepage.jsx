@@ -1,43 +1,107 @@
-import React from 'react';
-import { ArrowRight, Users, Truck, BookOpen, TrendingUp, Shield, Heart } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import {
+  ArrowRight,
+  Truck,
+  BookOpen,
+  TrendingUp,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Homepage({ onNavigate }) {
+  const navigate = useNavigate();
+
+  // Simple helper: navigate + optional legacy onNavigate callback
+  const go = (path, slug) => {
+    try {
+      if (typeof onNavigate === "function") {
+        onNavigate(slug || path.replace("/", ""));
+      }
+    } catch {}
+    navigate(path);
+  };
+
+  // ---- Hero slider (remote image URLs) ----
+  const heroImages = [
+    // ⬇️ Replace these with your own remote image links
+    "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2400&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1464226184884-fa280b87c399?q=80&w=2400&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1492496913980-501348b61469?q=80&w=2400&auto=format&fit=crop",
+  ];
+  const [slide, setSlide] = useState(0);
+
+  // preload
+  useEffect(() => {
+    heroImages.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, [heroImages]);
+
+  // auto advance
+  useEffect(() => {
+    if (!heroImages.length) return;
+    const t = setInterval(
+      () => setSlide((i) => (i + 1) % heroImages.length),
+      5000
+    );
+    return () => clearInterval(t);
+  }, [heroImages.length]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-green-600 to-green-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center">
+      {/* ===== Hero Section (slider) ===== */}
+      <div className="relative h-[520px] sm:h-[560px] lg:h-[620px] overflow-hidden text-white">
+        {/* Slides */}
+        {heroImages.map((src, i) => (
+          <img
+            key={src}
+            src={src}
+            alt=""
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${
+              i === slide ? "opacity-100" : "opacity-0"
+            }`}
+            loading={i === 0 ? "eager" : "lazy"}
+          />
+        ))}
+
+        {/* Gradient overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/20" />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 h-full flex items-center">
+          <div className="text-center w-full">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Empowering Farmers with Fair Prices,
               <br className="hidden md:block" />
               Equipment Access, and Knowledge
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-green-100 max-w-3xl mx-auto">
-              Join India's most trusted digital ecosystem for farmers. Connect directly with buyers, 
-              access modern equipment, and grow with expert guidance.
+            <p className="text-xl md:text-2xl mb-8 text-white/90 max-w-3xl mx-auto">
+              Join India's most trusted digital ecosystem for farmers. Connect
+              directly with buyers, access modern equipment, and grow with
+              expert guidance.
             </p>
-            
+
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button
-                onClick={() => onNavigate('marketplace')}
+                onClick={() => go("/marketplace", "marketplace")}
                 className="w-full sm:w-auto bg-white text-green-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
               >
                 <TrendingUp className="h-5 w-5" />
                 Sell Crops
                 <ArrowRight className="h-4 w-4" />
               </button>
+
               <button
-                onClick={() => onNavigate('equipment')}
+                onClick={() => go("/equipment", "equipment")}
                 className="w-full sm:w-auto bg-green-800 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-900 transition-colors flex items-center justify-center gap-2"
               >
                 <Truck className="h-5 w-5" />
                 Rent Equipment
                 <ArrowRight className="h-4 w-4" />
               </button>
+
               <button
-                onClick={() => onNavigate('knowledge')}
+                onClick={() => go("/knowledge", "knowledge")}
                 className="w-full sm:w-auto bg-yellow-500 text-green-900 px-8 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2"
               >
                 <BookOpen className="h-5 w-5" />
@@ -48,23 +112,30 @@ export default function Homepage({ onNavigate }) {
           </div>
         </div>
 
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div
-            className="absolute inset-0 bg-repeat"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            }}
-          />
+        {/* Dots */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+          {heroImages.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setSlide(i)}
+              className={`h-2.5 w-2.5 rounded-full ${
+                i === slide ? "bg-white" : "bg-white/60 hover:bg-white/80"
+              }`}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Quick Services Highlight */}
+      {/* ===== Quick Services Highlight ===== */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Farmunity?</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            Why Choose Farmunity?
+          </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Built by farmers, for farmers. We understand your challenges and provide solutions that work.
+            Built by farmers, for farmers. We understand your challenges and
+            provide solutions that work.
           </p>
         </div>
 
@@ -74,12 +145,15 @@ export default function Homepage({ onNavigate }) {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <TrendingUp className="h-8 w-8 text-green-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Direct Market Access</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Direct Market Access
+            </h3>
             <p className="text-gray-600 mb-4">
-              Skip middlemen and sell directly to buyers at fair prices. Real-time market rates with transparent pricing.
+              Skip middlemen and sell directly to buyers at fair prices.
+              Real-time market rates with transparent pricing.
             </p>
             <button
-              onClick={() => onNavigate('marketplace')}
+              onClick={() => go("/marketplace", "marketplace")}
               className="text-green-600 hover:text-green-700 font-medium flex items-center gap-1 mx-auto"
             >
               Explore Marketplace <ArrowRight className="h-4 w-4" />
@@ -91,12 +165,15 @@ export default function Homepage({ onNavigate }) {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Truck className="h-8 w-8 text-green-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Equipment Sharing</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Equipment Sharing
+            </h3>
             <p className="text-gray-600 mb-4">
-              Access modern farming equipment when you need it. Rent, lease, or share with fellow farmers.
+              Access modern farming equipment when you need it. Rent, lease, or
+              share with fellow farmers.
             </p>
             <button
-              onClick={() => onNavigate('equipment')}
+              onClick={() => go("/equipment", "equipment")}
               className="text-green-600 hover:text-green-700 font-medium flex items-center gap-1 mx-auto"
             >
               Browse Equipment <ArrowRight className="h-4 w-4" />
@@ -108,12 +185,15 @@ export default function Homepage({ onNavigate }) {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <BookOpen className="h-8 w-8 text-green-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Expert Guidance</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Expert Guidance
+            </h3>
             <p className="text-gray-600 mb-4">
-              Get AI-powered crop advice, weather updates, and connect with agricultural experts anytime.
+              Get AI-powered crop advice, weather updates, and connect with
+              agricultural experts anytime.
             </p>
             <button
-              onClick={() => onNavigate('knowledge')}
+              onClick={() => go("/knowledge", "knowledge")}
               className="text-green-600 hover:text-green-700 font-medium flex items-center gap-1 mx-auto"
             >
               Get Support <ArrowRight className="h-4 w-4" />

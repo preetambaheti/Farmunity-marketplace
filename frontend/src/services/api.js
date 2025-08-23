@@ -318,9 +318,27 @@ export const api = {
       { headers: { ...authHeaders() } }
     ),
 
-    // ===== Notifications (protected) =====
-    myNotifications: () =>
-      req("/api/notifications", { headers: { ...authHeaders() } }),
-  };
+  // ===== Notifications (protected) =====
+  myNotifications: () =>
+    req("/api/notifications", { headers: { ...authHeaders() } }),
+
+  // =========================
+  // === PRICE AGGREGATION ===
+  // =========================
+
+  /** Get list of states that have price data for today (sorted). */
+  getStates: () => req("/api/states"),
+
+  /**
+   * Get today’s market prices for the six crops for a given state & type.
+   * @param {{state?: string, type?: 'wholesale'|'retail'}} params
+   * @returns {Promise<{state:string,type:string,date:string,items:Array}>}
+   */
+  getTodayPrices: ({ state = "Karnataka", type = "wholesale" } = {}) => {
+    const s = encodeURIComponent(state);
+    const t = encodeURIComponent(type);
+    return req(`/api/prices/today?state=${s}&type=${t}`);
+  },
+};
 
 export default api;

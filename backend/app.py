@@ -11,8 +11,10 @@ from dotenv import load_dotenv
 from flask import Flask, request, jsonify, g, Response
 from flask_cors import CORS
 from pymongo import MongoClient, ASCENDING, DESCENDING
+from db import mongo                           # <-- PyMongo instance from db.py
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
+from prices_today import bp as prices_today_bp  # <-- import is fine here (registration happens later)
 
 # ---- Gemini (AI) ----
 # pip install google-generativeai
@@ -21,24 +23,33 @@ import google.generativeai as genai
 load_dotenv()
 
 # ---- Config ----
-MONGO_URI = os.getenv("MONGO_URI")
+MONGO_URI = os.getenv("MONGO_URI") or "mongodb://localhost:27017/farmunity"  # <-- safe default
 DB_NAME = os.getenv("DB_NAME", "farmunity")
 JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret")
 JWT_EXPIRE_DAYS = 7
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")  # or gemini-1.5-pro
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY") or os.getenv("OWM_API_KEY")
 
 # Configure Gemini once
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
 
+# ---- Flask app & CORS (CREATE APP BEFORE REGISTERING BLUEPRINTS) ----
 app = Flask(__name__)
 # In production, lock origins to your exact frontend origin
 CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
-# ---- Mongo ----
+# ---- PyMongo init for blueprints that use `from db import mongo` ----
+app.config["MONGO_URI"] = MONGO_URI
+mongo.init_app(app)  # <-- IMPORTANT: init before registering prices_today_bp
+
+# ---- Register blueprints AFTER mongo is initialized ----
+app.register_blueprint(prices_today_bp)
+
+# ---- Native pymongo (you already use this across the app) ----
+# It's okay to keep this in parallel; make sure it points to the same DB.
 client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 
@@ -109,8 +120,8 @@ def serialize_user(u):
         "id": oid_str(u["_id"]),
         "name": u.get("name"),
         "email": u.get("email"),
-        "role": (u.get("role") or "").lower(),          # normalized
-        "location": u.get("location"),                  # e.g., "Ludhiana, Punjab"
+        "role": (u.get("role") or "").lower(),
+        "location": u.get("location"),
         "phone": u.get("phone"),
         "avatarUrl": u.get("avatarUrl"),
         "preferredLanguage": u.get("preferredLanguage"),
@@ -234,7 +245,6 @@ def token_optional(fn):
                 if user:
                     g.current_user = user
             except Exception:
-                # ignore token errors for optional auth
                 g.current_user = None
         return fn(*args, **kwargs)
     return wrapper

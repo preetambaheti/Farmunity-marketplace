@@ -4,28 +4,29 @@ import { Filter, MapPin, Star, MessageCircle, TrendingUp, TrendingDown } from "l
 import { api } from "../services/api";
 import ChatBox from "./ChatBox";
 
+const CROPS = ["Wheat", "Rice", "Corn", "Tomato", "Onion", "Potato"];
+
 export default function Marketplace({ onUnauthorized }) {
   const [selectedFilter, setSelectedFilter] = useState("all");
-  const [priceView, setPriceView] = useState("wholesale");
 
-  // Chat state
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatListing, setChatListing] = useState(null);
+  // ---- Prices controls ----
+  const [priceView, setPriceView] = useState("wholesale"); // 'wholesale' | 'retail'
+  const [states, setStates] = useState([]);
+  const [selectedState, setSelectedState] = useState("Karnataka");
 
-  // Data state
+  // ---- Prices data ----
+  const [prices, setPrices] = useState([]); // [{crop, price_per_qt, change_pct, unit, state}, ...]
+  const [priceLoading, setPriceLoading] = useState(true);
+  const [priceErr, setPriceErr] = useState("");
+
+  // ---- Listings (protected) ----
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  // ---- Temporary local prices (optional: move to API later) ----
-  const marketPrices = [
-    { crop: "Wheat", wholesale: 2150, retail: 2400, change: +5.2, location: "Punjab" },
-    { crop: "Rice", wholesale: 1850, retail: 2100, change: -2.1, location: "Haryana" },
-    { crop: "Corn", wholesale: 1650, retail: 1900, change: +8.5, location: "Karnataka" },
-    { crop: "Tomato", wholesale: 3200, retail: 4000, change: +15.2, location: "Maharashtra" },
-    { crop: "Onion", wholesale: 2800, retail: 3400, change: -12.3, location: "Rajasthan" },
-    { crop: "Potato", wholesale: 1200, retail: 1600, change: +3.1, location: "Uttar Pradesh" },
-  ];
+  // Chat state
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatListing, setChatListing] = useState(null);
 
   // ---- Safe fallback listings (shown only if API fails) ----
   const fallbackListings = [
@@ -39,7 +40,8 @@ export default function Marketplace({ onUnauthorized }) {
       location: "Ludhiana, Punjab",
       quality: "Grade A",
       rating: 4.8,
-      image: "https://images.pexels.com/photos/265216/pexels-photo-265216.jpeg?auto=compress&cs=tinysrgb&w=600",
+      image:
+        "https://images.pexels.com/photos/265216/pexels-photo-265216.jpeg?auto=compress&cs=tinysrgb&w=600",
       category: "grains",
     },
     {
@@ -52,20 +54,73 @@ export default function Marketplace({ onUnauthorized }) {
       location: "Nashik, Maharashtra",
       quality: "Grade A",
       rating: 4.6,
-      image: "https://images.pexels.com/photos/1327838/pexels-photo-1327838.jpeg?auto=compress&cs=tinysrgb&w=600",
+      image:
+        "https://images.pexels.com/photos/1327838/pexels-photo-1327838.jpeg?auto=compress&cs=tinysrgb&w=600",
       category: "vegetables",
     },
   ];
 
-  // ---- Fetch protected data on mount ----
+  // ------------------------
+  // Fetch STATES once
+  // ------------------------
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const r = await api.getStates();
+        const list =
+          r?.states?.length
+            ? r.states
+            : [
+                "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat",
+                "Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh",
+                "Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan",
+                "Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal",
+                "Jammu and Kashmir"
+              ];
+        if (!mounted) return;
+        setStates(list);
+        if (!list.includes(selectedState)) setSelectedState(list[0]);
+      } catch {
+        // fallback already handled above
+      }
+    })();
+    return () => { mounted = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ------------------------
+  // Fetch TODAY PRICES whenever state/type changes
+  // ------------------------
+  useEffect(() => {
+    let mounted = true;
+    setPriceLoading(true);
+    setPriceErr("");
+    api
+      .getTodayPrices({ state: selectedState, type: priceView })
+      .then((r) => {
+        if (!mounted) return;
+        setPrices(r?.items || []);
+      })
+      .catch((e) => {
+        if (!mounted) return;
+        setPriceErr(e.message || "Failed to load prices");
+        setPrices([]);
+      })
+      .finally(() => mounted && setPriceLoading(false));
+    return () => { mounted = false; };
+  }, [selectedState, priceView]);
+
+  // ------------------------
+  // Fetch protected crop listings
+  // ------------------------
   useEffect(() => {
     (async () => {
       try {
         const res = await api.getCrops(); // PROTECTED API CALL
-        // Normalize each document to the UI shape
         const normalized = (res.items || []).map((x, idx) => ({
           id: x.id || x._id || String(idx),
-          ownerId: x.ownerId || x.createdBy || null, // <-- required for chat
+          ownerId: x.ownerId || x.createdBy || null,
           farmer: x.farmer || x.ownerName || "Farmer",
           crop: x.crop || x.title || "Crop",
           quantity: x.quantity || x.qty || "—",
@@ -89,8 +144,7 @@ export default function Marketplace({ onUnauthorized }) {
         setItems(normalized);
       } catch (e) {
         setErr(e.message);
-        if (onUnauthorized) onUnauthorized(); // e.g., navigate('login')
-        // Show fallback so page isn’t empty during setup
+        if (onUnauthorized) onUnauthorized();
         setItems(fallbackListings);
       } finally {
         setLoading(false);
@@ -99,7 +153,7 @@ export default function Marketplace({ onUnauthorized }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ---- Client-side filter ----
+  // ---- Client-side filter for listings ----
   const filteredListings = useMemo(() => {
     if (selectedFilter === "all") return items;
     return items.filter((it) => {
@@ -110,6 +164,25 @@ export default function Marketplace({ onUnauthorized }) {
       return cat === selectedFilter;
     });
   }, [items, selectedFilter]);
+
+  // ---- Helper: map price array by crop for quick access ----
+  const priceByCrop = useMemo(() => {
+    const m = {};
+    for (const r of prices) m[r.crop] = r;
+    return m;
+  }, [prices]);
+
+  // ---- Small component for % change badge ----
+  const Change = ({ pct }) => {
+    if (pct === null || pct === undefined) return <span className="text-gray-400">—</span>;
+    const pos = Number(pct) >= 0;
+    return (
+      <div className={`flex items-center justify-center text-xs ${pos ? "text-green-600" : "text-red-600"}`}>
+        {pos ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+        {Math.abs(Number(pct)).toFixed(1)}%
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -125,12 +198,13 @@ export default function Marketplace({ onUnauthorized }) {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
-        <div className="mb-8">
+        <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Crop Marketplace</h1>
           <p className="text-gray-600">Connect directly with buyers and sellers for fair trade</p>
-          {err && (
-            <div className="mt-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
-              {err}
+
+          {(err || priceErr) && (
+            <div className="mt-3 inline-block text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+              {err || priceErr}
             </div>
           )}
         </div>
@@ -140,53 +214,65 @@ export default function Marketplace({ onUnauthorized }) {
           <div className="p-6 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-xl font-semibold text-gray-900">Today's Market Prices</h2>
-              <div className="flex bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setPriceView("wholesale")}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    priceView === "wholesale"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  Wholesale
-                </button>
-                <button
-                  onClick={() => setPriceView("retail")}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    priceView === "retail"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  Retail
-                </button>
+
+              <div className="flex items-center gap-3">
+                {/* State dropdown */}
+                <label className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">State</span>
+                  <select
+                    className="border rounded-md px-3 py-2 text-sm focus:outline-none"
+                    value={selectedState}
+                    onChange={(e) => setSelectedState(e.target.value)}
+                  >
+                    {states.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                {/* Wholesale / Retail toggle */}
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setPriceView("wholesale")}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      priceView === "wholesale"
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    Wholesale
+                  </button>
+                  <button
+                    onClick={() => setPriceView("retail")}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      priceView === "retail"
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    Retail
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
+          {/* Prices grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 p-6">
-            {marketPrices.map((item, index) => (
-              <div key={index} className="text-center">
-                <div className="text-sm text-gray-600 mb-1">{item.crop}</div>
-                <div className="text-lg font-bold text-gray-900 mb-1">
-                  ₹{priceView === "wholesale" ? item.wholesale : item.retail}/qt
+            {CROPS.map((crop) => {
+              const row = priceByCrop[crop] || {};
+              return (
+                <div key={crop} className="text-center">
+                  <div className="text-sm text-gray-600 mb-1">{crop}</div>
+                  <div className="text-lg font-bold text-gray-900 mb-1">
+                    {row.price_per_qt != null ? `₹${row.price_per_qt}/qt` : "—"}
+                  </div>
+                  <Change pct={row.change_pct} />
                 </div>
-                <div
-                  className={`flex items-center justify-center text-xs ${
-                    item.change > 0 ? "text-green-600" : "text-red-600"
-                  }`}
-                >
-                  {item.change > 0 ? (
-                    <TrendingUp className="h-3 w-3 mr-1" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3 mr-1" />
-                  )}
-                  {Math.abs(item.change)}%
-                </div>
-                <div className="text-xs text-gray-500 mt-1">{item.location}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -285,11 +371,7 @@ export default function Marketplace({ onUnauthorized }) {
       </div>
 
       {/* Chat modal */}
-      <ChatBox
-        open={chatOpen}
-        onClose={() => setChatOpen(false)}
-        listing={chatListing}
-      />
+      <ChatBox open={chatOpen} onClose={() => setChatOpen(false)} listing={chatListing} />
     </div>
   );
 }

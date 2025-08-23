@@ -1,5 +1,7 @@
 import React from 'react';
+import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Youtube, Globe } from 'lucide-react';
+import FarmunityMark from "../assets/farmunity-mark.svg";
 
 export default function Footer({ onNavigate }) {
   return (
@@ -10,25 +12,35 @@ export default function Footer({ onNavigate }) {
           {/* Brand */}
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center mb-4">
-              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                <span className="text-green-800 font-bold text-sm">F</span>
-              </div>
-              <span className="ml-2 text-xl font-bold">Farmunity</span>
+              <a href="/" className="flex items-center group" aria-label="Farmunity – Home">
+                <img
+                  src={FarmunityMark}
+                  alt="Farmunity"
+                  className="w-8 h-8"
+                  width={32}
+                  height={32}
+                />
+                <span className="ml-2 text-xl font-bold text-white group-hover:opacity-90">
+                  Farmunity
+                </span>
+              </a>
             </div>
+
             <p className="text-green-100 mb-4">
               Empowering farmers with fair prices, equipment access, and knowledge for a sustainable future.
             </p>
+
             <div className="flex space-x-4">
-              <button className="text-green-200 hover:text-white transition-colors">
+              <button className="text-green-200 hover:text-white transition-colors" aria-label="Facebook">
                 <Facebook className="h-5 w-5" />
               </button>
-              <button className="text-green-200 hover:text-white transition-colors">
+              <button className="text-green-200 hover:text-white transition-colors" aria-label="Twitter">
                 <Twitter className="h-5 w-5" />
               </button>
-              <button className="text-green-200 hover:text-white transition-colors">
+              <button className="text-green-200 hover:text-white transition-colors" aria-label="Instagram">
                 <Instagram className="h-5 w-5" />
               </button>
-              <button className="text-green-200 hover:text-white transition-colors">
+              <button className="text-green-200 hover:text-white transition-colors" aria-label="YouTube">
                 <Youtube className="h-5 w-5" />
               </button>
             </div>
@@ -39,47 +51,48 @@ export default function Footer({ onNavigate }) {
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <button
-                  onClick={() => onNavigate('home')}
+                <Link
+                  to="/"
                   className="text-green-200 hover:text-white transition-colors"
                 >
                   Home
-                </button>
+                </Link>
               </li>
               <li>
-                <button
-                  onClick={() => onNavigate('marketplace')}
+                <Link
+                  to="/marketplace"
                   className="text-green-200 hover:text-white transition-colors"
                 >
                   Marketplace
-                </button>
+                </Link>
               </li>
               <li>
-                <button
-                  onClick={() => onNavigate('equipment')}
+                <Link
+                  to="/equipment"
                   className="text-green-200 hover:text-white transition-colors"
                 >
                   Equipment Rental
-                </button>
+                </Link>
               </li>
               <li>
-                <button
-                  onClick={() => onNavigate('knowledge')}
+                <Link
+                  to="/knowledge"
                   className="text-green-200 hover:text-white transition-colors"
                 >
                   Knowledge Hub
-                </button>
+                </Link>
               </li>
               <li>
-                <button
-                  onClick={() => onNavigate('dashboard')}
+                <Link
+                  to="/dashboard"
                   className="text-green-200 hover:text-white transition-colors"
                 >
                   Dashboard
-                </button>
+                </Link>
               </li>
             </ul>
           </div>
+
 
           {/* Support */}
           <div>
@@ -115,17 +128,8 @@ export default function Footer({ onNavigate }) {
 
           {/* Language & Contact */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Language & Contact</h3>
+            <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
             <div className="mb-4">
-              <button className="flex items-center gap-2 text-green-200 hover:text-white transition-colors mb-2">
-                <Globe className="h-4 w-4" />
-                Language
-              </button>
-              <div className="ml-6 space-y-1">
-                <button className="block text-green-200 hover:text-white transition-colors text-sm">English</button>
-                <button className="block text-green-200 hover:text-white transition-colors text-sm">हिंदी</button>
-                <button className="block text-green-200 hover:text-white transition-colors text-sm">ಕನ್ನಡ</button>
-              </div>
             </div>
             <div className="space-y-2">
               <p className="text-green-200">

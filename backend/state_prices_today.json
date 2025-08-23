@@ -1,0 +1,2354 @@
+{
+  "generated_at": "2025-08-23",
+  "states": [
+    {
+      "state": "Andhra Pradesh",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2240,
+            "yesterday_price": 2293,
+            "change_pct": -2.3,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1900,
+            "yesterday_price": 1958,
+            "change_pct": -3.0,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1675,
+            "yesterday_price": 1723,
+            "change_pct": -2.8,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2308,
+            "yesterday_price": 2335,
+            "change_pct": -1.2,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2668,
+            "yesterday_price": 2626,
+            "change_pct": 1.6,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1320,
+            "yesterday_price": 1328,
+            "change_pct": -0.6,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2482,
+            "yesterday_price": 2540,
+            "change_pct": -2.3,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2102,
+            "yesterday_price": 2167,
+            "change_pct": -3.0,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1828,
+            "yesterday_price": 1881,
+            "change_pct": -2.8,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2523,
+            "yesterday_price": 2553,
+            "change_pct": -1.2,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2946,
+            "yesterday_price": 2899,
+            "change_pct": 1.6,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1455,
+            "yesterday_price": 1464,
+            "change_pct": -0.6,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Arunachal Pradesh",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2202,
+            "yesterday_price": 2233,
+            "change_pct": -1.4,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1974,
+            "yesterday_price": 1979,
+            "change_pct": -0.3,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1736,
+            "yesterday_price": 1737,
+            "change_pct": -0.1,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2509,
+            "yesterday_price": 2495,
+            "change_pct": 0.6,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2681,
+            "yesterday_price": 2615,
+            "change_pct": 2.5,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1352,
+            "yesterday_price": 1337,
+            "change_pct": 1.1,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2405,
+            "yesterday_price": 2438,
+            "change_pct": -1.4,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2155,
+            "yesterday_price": 2161,
+            "change_pct": -0.3,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1902,
+            "yesterday_price": 1903,
+            "change_pct": -0.1,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2781,
+            "yesterday_price": 2765,
+            "change_pct": 0.6,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2971,
+            "yesterday_price": 2898,
+            "change_pct": 2.5,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1482,
+            "yesterday_price": 1465,
+            "change_pct": 1.2,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Assam",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2173,
+            "yesterday_price": 2161,
+            "change_pct": 0.6,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1851,
+            "yesterday_price": 1855,
+            "change_pct": -0.2,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1627,
+            "yesterday_price": 1628,
+            "change_pct": -0.1,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 1658,
+            "yesterday_price": 1724,
+            "change_pct": -3.8,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 1788,
+            "yesterday_price": 1854,
+            "change_pct": -3.6,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1080,
+            "yesterday_price": 1112,
+            "change_pct": -2.9,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2390,
+            "yesterday_price": 2377,
+            "change_pct": 0.5,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2037,
+            "yesterday_price": 2042,
+            "change_pct": -0.2,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1799,
+            "yesterday_price": 1800,
+            "change_pct": -0.1,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 1838,
+            "yesterday_price": 1911,
+            "change_pct": -3.8,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 1960,
+            "yesterday_price": 2032,
+            "change_pct": -3.5,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1185,
+            "yesterday_price": 1220,
+            "change_pct": -2.9,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Bihar",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2683,
+            "yesterday_price": 2621,
+            "change_pct": 2.4,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2138,
+            "yesterday_price": 2158,
+            "change_pct": -0.9,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1881,
+            "yesterday_price": 1895,
+            "change_pct": -0.7,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2780,
+            "yesterday_price": 2763,
+            "change_pct": 0.6,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2353,
+            "yesterday_price": 2395,
+            "change_pct": -1.8,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1496,
+            "yesterday_price": 1479,
+            "change_pct": 1.1,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2970,
+            "yesterday_price": 2902,
+            "change_pct": 2.3,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2332,
+            "yesterday_price": 2354,
+            "change_pct": -0.9,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 2061,
+            "yesterday_price": 2077,
+            "change_pct": -0.8,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 3042,
+            "yesterday_price": 3024,
+            "change_pct": 0.6,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2598,
+            "yesterday_price": 2645,
+            "change_pct": -1.8,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1650,
+            "yesterday_price": 1631,
+            "change_pct": 1.2,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Chhattisgarh",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2218,
+            "yesterday_price": 2238,
+            "change_pct": -0.9,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1983,
+            "yesterday_price": 1981,
+            "change_pct": 0.1,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1743,
+            "yesterday_price": 1738,
+            "change_pct": 0.3,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 3000,
+            "yesterday_price": 2901,
+            "change_pct": 3.4,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2682,
+            "yesterday_price": 2613,
+            "change_pct": 2.6,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1185,
+            "yesterday_price": 1140,
+            "change_pct": 3.9,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2419,
+            "yesterday_price": 2441,
+            "change_pct": -0.9,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2179,
+            "yesterday_price": 2177,
+            "change_pct": 0.1,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1922,
+            "yesterday_price": 1917,
+            "change_pct": 0.3,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 3294,
+            "yesterday_price": 3185,
+            "change_pct": 3.4,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2971,
+            "yesterday_price": 2895,
+            "change_pct": 2.6,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1311,
+            "yesterday_price": 1262,
+            "change_pct": 3.9,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Goa",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 1985,
+            "yesterday_price": 2059,
+            "change_pct": -3.6,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1858,
+            "yesterday_price": 1873,
+            "change_pct": -0.8,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1617,
+            "yesterday_price": 1634,
+            "change_pct": -1.0,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2619,
+            "yesterday_price": 2571,
+            "change_pct": 1.9,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2288,
+            "yesterday_price": 2281,
+            "change_pct": 0.3,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1358,
+            "yesterday_price": 1326,
+            "change_pct": 2.4,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2175,
+            "yesterday_price": 2256,
+            "change_pct": -3.6,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2035,
+            "yesterday_price": 2051,
+            "change_pct": -0.8,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1779,
+            "yesterday_price": 1797,
+            "change_pct": -1.0,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2865,
+            "yesterday_price": 2813,
+            "change_pct": 1.8,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2500,
+            "yesterday_price": 2493,
+            "change_pct": 0.3,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1497,
+            "yesterday_price": 1462,
+            "change_pct": 2.4,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Gujarat",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2457,
+            "yesterday_price": 2389,
+            "change_pct": 2.8,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2155,
+            "yesterday_price": 2094,
+            "change_pct": 2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1889,
+            "yesterday_price": 1833,
+            "change_pct": 3.1,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2006,
+            "yesterday_price": 2055,
+            "change_pct": -2.4,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2190,
+            "yesterday_price": 2218,
+            "change_pct": -1.3,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1205,
+            "yesterday_price": 1227,
+            "change_pct": -1.8,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2717,
+            "yesterday_price": 2642,
+            "change_pct": 2.8,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2380,
+            "yesterday_price": 2313,
+            "change_pct": 2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 2096,
+            "yesterday_price": 2033,
+            "change_pct": 3.1,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2198,
+            "yesterday_price": 2251,
+            "change_pct": -2.4,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2414,
+            "yesterday_price": 2444,
+            "change_pct": -1.2,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1331,
+            "yesterday_price": 1355,
+            "change_pct": -1.8,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Haryana",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2213,
+            "yesterday_price": 2179,
+            "change_pct": 1.6,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1644,
+            "yesterday_price": 1712,
+            "change_pct": -4.0,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1451,
+            "yesterday_price": 1508,
+            "change_pct": -3.8,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2601,
+            "yesterday_price": 2545,
+            "change_pct": 2.2,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 1848,
+            "yesterday_price": 1903,
+            "change_pct": -2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1336,
+            "yesterday_price": 1300,
+            "change_pct": 2.8,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2423,
+            "yesterday_price": 2386,
+            "change_pct": 1.6,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1800,
+            "yesterday_price": 1874,
+            "change_pct": -3.9,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1596,
+            "yesterday_price": 1659,
+            "change_pct": -3.8,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2863,
+            "yesterday_price": 2801,
+            "change_pct": 2.2,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2016,
+            "yesterday_price": 2076,
+            "change_pct": -2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1481,
+            "yesterday_price": 1441,
+            "change_pct": 2.8,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Himachal Pradesh",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2598,
+            "yesterday_price": 2539,
+            "change_pct": 2.3,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2196,
+            "yesterday_price": 2172,
+            "change_pct": 1.1,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1928,
+            "yesterday_price": 1904,
+            "change_pct": 1.3,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 1943,
+            "yesterday_price": 2015,
+            "change_pct": -3.6,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2227,
+            "yesterday_price": 2276,
+            "change_pct": -2.2,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1230,
+            "yesterday_price": 1268,
+            "change_pct": -3.0,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2867,
+            "yesterday_price": 2801,
+            "change_pct": 2.4,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2419,
+            "yesterday_price": 2392,
+            "change_pct": 1.1,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 2131,
+            "yesterday_price": 2105,
+            "change_pct": 1.2,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2129,
+            "yesterday_price": 2208,
+            "change_pct": -3.6,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2449,
+            "yesterday_price": 2503,
+            "change_pct": -2.2,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1359,
+            "yesterday_price": 1401,
+            "change_pct": -3.0,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Jharkhand",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2119,
+            "yesterday_price": 2122,
+            "change_pct": -0.1,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1695,
+            "yesterday_price": 1747,
+            "change_pct": -3.0,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1495,
+            "yesterday_price": 1538,
+            "change_pct": -2.8,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2013,
+            "yesterday_price": 2043,
+            "change_pct": -1.5,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 1841,
+            "yesterday_price": 1774,
+            "change_pct": 3.8,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1165,
+            "yesterday_price": 1175,
+            "change_pct": -0.9,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2347,
+            "yesterday_price": 2350,
+            "change_pct": -0.1,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1874,
+            "yesterday_price": 1932,
+            "change_pct": -3.0,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1631,
+            "yesterday_price": 1678,
+            "change_pct": -2.8,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2218,
+            "yesterday_price": 2251,
+            "change_pct": -1.5,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2032,
+            "yesterday_price": 1958,
+            "change_pct": 3.8,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1270,
+            "yesterday_price": 1281,
+            "change_pct": -0.9,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Karnataka",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2348,
+            "yesterday_price": 2409,
+            "change_pct": -2.5,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2384,
+            "yesterday_price": 2312,
+            "change_pct": 3.1,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 2089,
+            "yesterday_price": 2023,
+            "change_pct": 3.3,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2959,
+            "yesterday_price": 2912,
+            "change_pct": 1.6,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2781,
+            "yesterday_price": 2743,
+            "change_pct": 1.4,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1546,
+            "yesterday_price": 1513,
+            "change_pct": 2.2,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2585,
+            "yesterday_price": 2652,
+            "change_pct": -2.5,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2609,
+            "yesterday_price": 2530,
+            "change_pct": 3.1,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 2296,
+            "yesterday_price": 2224,
+            "change_pct": 3.2,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 3265,
+            "yesterday_price": 3213,
+            "change_pct": 1.6,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 3051,
+            "yesterday_price": 3010,
+            "change_pct": 1.4,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1688,
+            "yesterday_price": 1652,
+            "change_pct": 2.2,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Kerala",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2405,
+            "yesterday_price": 2351,
+            "change_pct": 2.3,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1758,
+            "yesterday_price": 1829,
+            "change_pct": -3.9,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1663,
+            "yesterday_price": 1600,
+            "change_pct": 3.9,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2990,
+            "yesterday_price": 2892,
+            "change_pct": 3.4,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2105,
+            "yesterday_price": 2144,
+            "change_pct": -1.8,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1181,
+            "yesterday_price": 1136,
+            "change_pct": 4.0,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2642,
+            "yesterday_price": 2583,
+            "change_pct": 2.3,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1932,
+            "yesterday_price": 2010,
+            "change_pct": -3.9,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1836,
+            "yesterday_price": 1766,
+            "change_pct": 4.0,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 3281,
+            "yesterday_price": 3174,
+            "change_pct": 3.4,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2304,
+            "yesterday_price": 2347,
+            "change_pct": -1.8,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1306,
+            "yesterday_price": 1257,
+            "change_pct": 3.9,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Madhya Pradesh",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2310,
+            "yesterday_price": 2379,
+            "change_pct": -2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2075,
+            "yesterday_price": 2108,
+            "change_pct": -1.6,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1807,
+            "yesterday_price": 1840,
+            "change_pct": -1.8,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2830,
+            "yesterday_price": 2801,
+            "change_pct": 1.0,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2658,
+            "yesterday_price": 2641,
+            "change_pct": 0.6,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1504,
+            "yesterday_price": 1480,
+            "change_pct": 1.6,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2560,
+            "yesterday_price": 2637,
+            "change_pct": -2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2268,
+            "yesterday_price": 2304,
+            "change_pct": -1.6,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1982,
+            "yesterday_price": 2018,
+            "change_pct": -1.8,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 3123,
+            "yesterday_price": 3091,
+            "change_pct": 1.0,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2936,
+            "yesterday_price": 2917,
+            "change_pct": 0.7,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1641,
+            "yesterday_price": 1615,
+            "change_pct": 1.6,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Maharashtra",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2686,
+            "yesterday_price": 2611,
+            "change_pct": 2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1983,
+            "yesterday_price": 2046,
+            "change_pct": -3.1,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1749,
+            "yesterday_price": 1801,
+            "change_pct": -2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 3052,
+            "yesterday_price": 2987,
+            "change_pct": 2.2,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2396,
+            "yesterday_price": 2426,
+            "change_pct": -1.2,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1568,
+            "yesterday_price": 1526,
+            "change_pct": 2.8,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2950,
+            "yesterday_price": 2868,
+            "change_pct": 2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2173,
+            "yesterday_price": 2242,
+            "change_pct": -3.1,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1924,
+            "yesterday_price": 1981,
+            "change_pct": -2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 3371,
+            "yesterday_price": 3299,
+            "change_pct": 2.2,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2625,
+            "yesterday_price": 2658,
+            "change_pct": -1.2,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1714,
+            "yesterday_price": 1668,
+            "change_pct": 2.8,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Manipur",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2267,
+            "yesterday_price": 2284,
+            "change_pct": -0.7,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1925,
+            "yesterday_price": 1854,
+            "change_pct": 3.8,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1941,
+            "yesterday_price": 1873,
+            "change_pct": 3.6,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2068,
+            "yesterday_price": 2114,
+            "change_pct": -2.2,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2798,
+            "yesterday_price": 2713,
+            "change_pct": 3.1,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1231,
+            "yesterday_price": 1251,
+            "change_pct": -1.6,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2476,
+            "yesterday_price": 2494,
+            "change_pct": -0.7,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2127,
+            "yesterday_price": 2049,
+            "change_pct": 3.8,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 2153,
+            "yesterday_price": 2077,
+            "change_pct": 3.7,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2265,
+            "yesterday_price": 2316,
+            "change_pct": -2.2,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 3101,
+            "yesterday_price": 3007,
+            "change_pct": 3.1,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1359,
+            "yesterday_price": 1381,
+            "change_pct": -1.6,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Meghalaya",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2033,
+            "yesterday_price": 2085,
+            "change_pct": -2.5,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1918,
+            "yesterday_price": 1908,
+            "change_pct": 0.5,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1684,
+            "yesterday_price": 1673,
+            "change_pct": 0.7,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 1838,
+            "yesterday_price": 1892,
+            "change_pct": -2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2409,
+            "yesterday_price": 2376,
+            "change_pct": 1.4,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1125,
+            "yesterday_price": 1151,
+            "change_pct": -2.3,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2244,
+            "yesterday_price": 2301,
+            "change_pct": -2.5,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2116,
+            "yesterday_price": 2105,
+            "change_pct": 0.5,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1866,
+            "yesterday_price": 1854,
+            "change_pct": 0.6,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2016,
+            "yesterday_price": 2075,
+            "change_pct": -2.8,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2652,
+            "yesterday_price": 2616,
+            "change_pct": 1.4,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1244,
+            "yesterday_price": 1272,
+            "change_pct": -2.2,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Mizoram",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2016,
+            "yesterday_price": 2088,
+            "change_pct": -3.4,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1851,
+            "yesterday_price": 1780,
+            "change_pct": 4.0,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1507,
+            "yesterday_price": 1568,
+            "change_pct": -3.9,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2296,
+            "yesterday_price": 2301,
+            "change_pct": -0.2,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2334,
+            "yesterday_price": 2323,
+            "change_pct": 0.5,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1270,
+            "yesterday_price": 1266,
+            "change_pct": 0.3,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2217,
+            "yesterday_price": 2296,
+            "change_pct": -3.4,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2053,
+            "yesterday_price": 1974,
+            "change_pct": 4.0,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1648,
+            "yesterday_price": 1715,
+            "change_pct": -3.9,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2520,
+            "yesterday_price": 2526,
+            "change_pct": -0.2,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2560,
+            "yesterday_price": 2547,
+            "change_pct": 0.5,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1405,
+            "yesterday_price": 1401,
+            "change_pct": 0.3,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Nagaland",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 1965,
+            "yesterday_price": 2028,
+            "change_pct": -3.1,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1678,
+            "yesterday_price": 1738,
+            "change_pct": -3.5,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1480,
+            "yesterday_price": 1530,
+            "change_pct": -3.3,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2265,
+            "yesterday_price": 2263,
+            "change_pct": 0.1,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2293,
+            "yesterday_price": 2275,
+            "change_pct": 0.8,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1241,
+            "yesterday_price": 1233,
+            "change_pct": 0.6,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2175,
+            "yesterday_price": 2245,
+            "change_pct": -3.1,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1830,
+            "yesterday_price": 1895,
+            "change_pct": -3.4,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1621,
+            "yesterday_price": 1676,
+            "change_pct": -3.3,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2469,
+            "yesterday_price": 2467,
+            "change_pct": 0.1,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2529,
+            "yesterday_price": 2510,
+            "change_pct": 0.8,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1364,
+            "yesterday_price": 1355,
+            "change_pct": 0.7,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Odisha",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 1992,
+            "yesterday_price": 2045,
+            "change_pct": -2.6,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1759,
+            "yesterday_price": 1792,
+            "change_pct": -1.8,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1548,
+            "yesterday_price": 1575,
+            "change_pct": -1.7,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2157,
+            "yesterday_price": 2170,
+            "change_pct": -0.6,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2311,
+            "yesterday_price": 2289,
+            "change_pct": 1.0,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1209,
+            "yesterday_price": 1209,
+            "change_pct": 0.0,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2177,
+            "yesterday_price": 2235,
+            "change_pct": -2.6,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1950,
+            "yesterday_price": 1987,
+            "change_pct": -1.9,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1692,
+            "yesterday_price": 1721,
+            "change_pct": -1.7,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2385,
+            "yesterday_price": 2399,
+            "change_pct": -0.6,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2565,
+            "yesterday_price": 2541,
+            "change_pct": 0.9,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1323,
+            "yesterday_price": 1323,
+            "change_pct": 0.0,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Punjab",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2424,
+            "yesterday_price": 2383,
+            "change_pct": 1.7,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2183,
+            "yesterday_price": 2123,
+            "change_pct": 2.8,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1913,
+            "yesterday_price": 1858,
+            "change_pct": 3.0,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2754,
+            "yesterday_price": 2707,
+            "change_pct": 1.7,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2079,
+            "yesterday_price": 2130,
+            "change_pct": -2.4,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1433,
+            "yesterday_price": 1401,
+            "change_pct": 2.3,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2651,
+            "yesterday_price": 2606,
+            "change_pct": 1.7,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2390,
+            "yesterday_price": 2324,
+            "change_pct": 2.8,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 2102,
+            "yesterday_price": 2041,
+            "change_pct": 3.0,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 3019,
+            "yesterday_price": 2967,
+            "change_pct": 1.8,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2307,
+            "yesterday_price": 2364,
+            "change_pct": -2.4,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1583,
+            "yesterday_price": 1548,
+            "change_pct": 2.3,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Rajasthan",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2390,
+            "yesterday_price": 2425,
+            "change_pct": -1.4,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2320,
+            "yesterday_price": 2263,
+            "change_pct": 2.5,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 2035,
+            "yesterday_price": 1981,
+            "change_pct": 2.7,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2129,
+            "yesterday_price": 2188,
+            "change_pct": -2.7,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2905,
+            "yesterday_price": 2835,
+            "change_pct": 2.5,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1295,
+            "yesterday_price": 1323,
+            "change_pct": -2.1,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2626,
+            "yesterday_price": 2665,
+            "change_pct": -1.5,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2558,
+            "yesterday_price": 2495,
+            "change_pct": 2.5,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 2254,
+            "yesterday_price": 2194,
+            "change_pct": 2.7,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2331,
+            "yesterday_price": 2396,
+            "change_pct": -2.7,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 3184,
+            "yesterday_price": 3107,
+            "change_pct": 2.5,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1429,
+            "yesterday_price": 1460,
+            "change_pct": -2.1,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Sikkim",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2233,
+            "yesterday_price": 2193,
+            "change_pct": 1.8,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1927,
+            "yesterday_price": 1901,
+            "change_pct": 1.4,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1676,
+            "yesterday_price": 1656,
+            "change_pct": 1.2,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 1951,
+            "yesterday_price": 1988,
+            "change_pct": -1.9,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 1922,
+            "yesterday_price": 1967,
+            "change_pct": -2.3,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1147,
+            "yesterday_price": 1162,
+            "change_pct": -1.3,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2454,
+            "yesterday_price": 2410,
+            "change_pct": 1.8,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2131,
+            "yesterday_price": 2102,
+            "change_pct": 1.4,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1860,
+            "yesterday_price": 1838,
+            "change_pct": 1.2,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2163,
+            "yesterday_price": 2204,
+            "change_pct": -1.9,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2107,
+            "yesterday_price": 2156,
+            "change_pct": -2.3,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1259,
+            "yesterday_price": 1275,
+            "change_pct": -1.3,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Tamil Nadu",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2365,
+            "yesterday_price": 2323,
+            "change_pct": 1.8,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2121,
+            "yesterday_price": 2064,
+            "change_pct": 2.8,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1860,
+            "yesterday_price": 1807,
+            "change_pct": 2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2345,
+            "yesterday_price": 2350,
+            "change_pct": -0.2,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2036,
+            "yesterday_price": 2084,
+            "change_pct": -2.3,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1297,
+            "yesterday_price": 1292,
+            "change_pct": 0.4,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2581,
+            "yesterday_price": 2535,
+            "change_pct": 1.8,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2352,
+            "yesterday_price": 2289,
+            "change_pct": 2.8,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 2035,
+            "yesterday_price": 1977,
+            "change_pct": 2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2587,
+            "yesterday_price": 2593,
+            "change_pct": -0.2,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2257,
+            "yesterday_price": 2310,
+            "change_pct": -2.3,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1416,
+            "yesterday_price": 1411,
+            "change_pct": 0.4,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Telangana",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 1977,
+            "yesterday_price": 2030,
+            "change_pct": -2.6,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 1892,
+            "yesterday_price": 1875,
+            "change_pct": 0.9,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1661,
+            "yesterday_price": 1644,
+            "change_pct": 1.0,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 1877,
+            "yesterday_price": 1921,
+            "change_pct": -2.3,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2337,
+            "yesterday_price": 2307,
+            "change_pct": 1.3,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1122,
+            "yesterday_price": 1142,
+            "change_pct": -1.8,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2163,
+            "yesterday_price": 2221,
+            "change_pct": -2.6,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2090,
+            "yesterday_price": 2071,
+            "change_pct": 0.9,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1841,
+            "yesterday_price": 1823,
+            "change_pct": 1.0,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2054,
+            "yesterday_price": 2102,
+            "change_pct": -2.3,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2548,
+            "yesterday_price": 2515,
+            "change_pct": 1.3,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1238,
+            "yesterday_price": 1260,
+            "change_pct": -1.7,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Tripura",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2493,
+            "yesterday_price": 2423,
+            "change_pct": 2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2153,
+            "yesterday_price": 2103,
+            "change_pct": 2.4,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1889,
+            "yesterday_price": 1842,
+            "change_pct": 2.6,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 1797,
+            "yesterday_price": 1868,
+            "change_pct": -3.8,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2222,
+            "yesterday_price": 2250,
+            "change_pct": -1.2,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1151,
+            "yesterday_price": 1190,
+            "change_pct": -3.3,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2731,
+            "yesterday_price": 2655,
+            "change_pct": 2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2370,
+            "yesterday_price": 2315,
+            "change_pct": 2.4,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 2089,
+            "yesterday_price": 2037,
+            "change_pct": 2.6,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 1963,
+            "yesterday_price": 2041,
+            "change_pct": -3.8,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2426,
+            "yesterday_price": 2457,
+            "change_pct": -1.3,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1267,
+            "yesterday_price": 1310,
+            "change_pct": -3.3,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Uttar Pradesh",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2636,
+            "yesterday_price": 2560,
+            "change_pct": 3.0,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2034,
+            "yesterday_price": 1959,
+            "change_pct": 3.8,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1795,
+            "yesterday_price": 1726,
+            "change_pct": 4.0,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 3053,
+            "yesterday_price": 2978,
+            "change_pct": 2.5,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2358,
+            "yesterday_price": 2385,
+            "change_pct": -1.1,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1554,
+            "yesterday_price": 1507,
+            "change_pct": 3.1,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2914,
+            "yesterday_price": 2830,
+            "change_pct": 3.0,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2231,
+            "yesterday_price": 2148,
+            "change_pct": 3.9,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1977,
+            "yesterday_price": 1901,
+            "change_pct": 4.0,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 3381,
+            "yesterday_price": 3298,
+            "change_pct": 2.5,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2597,
+            "yesterday_price": 2627,
+            "change_pct": -1.1,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1703,
+            "yesterday_price": 1652,
+            "change_pct": 3.1,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Uttarakhand",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2575,
+            "yesterday_price": 2510,
+            "change_pct": 2.6,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2271,
+            "yesterday_price": 2208,
+            "change_pct": 2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1991,
+            "yesterday_price": 1932,
+            "change_pct": 3.1,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2459,
+            "yesterday_price": 2470,
+            "change_pct": -0.4,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2274,
+            "yesterday_price": 2309,
+            "change_pct": -1.5,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1371,
+            "yesterday_price": 1370,
+            "change_pct": 0.1,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2849,
+            "yesterday_price": 2777,
+            "change_pct": 2.6,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2517,
+            "yesterday_price": 2447,
+            "change_pct": 2.9,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 2177,
+            "yesterday_price": 2112,
+            "change_pct": 3.1,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2703,
+            "yesterday_price": 2715,
+            "change_pct": -0.4,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2507,
+            "yesterday_price": 2546,
+            "change_pct": -1.5,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1519,
+            "yesterday_price": 1518,
+            "change_pct": 0.1,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "West Bengal",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2289,
+            "yesterday_price": 2290,
+            "change_pct": -0.0,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2090,
+            "yesterday_price": 2056,
+            "change_pct": 1.7,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1834,
+            "yesterday_price": 1801,
+            "change_pct": 1.8,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2015,
+            "yesterday_price": 2064,
+            "change_pct": -2.4,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2830,
+            "yesterday_price": 2725,
+            "change_pct": 3.9,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1227,
+            "yesterday_price": 1245,
+            "change_pct": -1.4,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 2519,
+            "yesterday_price": 2520,
+            "change_pct": -0.0,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2308,
+            "yesterday_price": 2271,
+            "change_pct": 1.6,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 2035,
+            "yesterday_price": 1998,
+            "change_pct": 1.9,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2212,
+            "yesterday_price": 2265,
+            "change_pct": -2.3,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 3106,
+            "yesterday_price": 2991,
+            "change_pct": 3.8,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1357,
+            "yesterday_price": 1377,
+            "change_pct": -1.5,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    },
+    {
+      "state": "Jammu and Kashmir",
+      "prices": {
+        "wholesale": {
+          "Wheat": {
+            "price_per_qt": 2775,
+            "yesterday_price": 2676,
+            "change_pct": 3.7,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2024,
+            "yesterday_price": 2082,
+            "change_pct": -2.8,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1784,
+            "yesterday_price": 1832,
+            "change_pct": -2.6,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 2813,
+            "yesterday_price": 2791,
+            "change_pct": 0.8,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2487,
+            "yesterday_price": 2507,
+            "change_pct": -0.8,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1506,
+            "yesterday_price": 1486,
+            "change_pct": 1.3,
+            "unit": "INR_PER_QT"
+          }
+        },
+        "retail": {
+          "Wheat": {
+            "price_per_qt": 3072,
+            "yesterday_price": 2962,
+            "change_pct": 3.7,
+            "unit": "INR_PER_QT"
+          },
+          "Rice": {
+            "price_per_qt": 2211,
+            "yesterday_price": 2274,
+            "change_pct": -2.8,
+            "unit": "INR_PER_QT"
+          },
+          "Corn": {
+            "price_per_qt": 1956,
+            "yesterday_price": 2008,
+            "change_pct": -2.6,
+            "unit": "INR_PER_QT"
+          },
+          "Tomato": {
+            "price_per_qt": 3077,
+            "yesterday_price": 3053,
+            "change_pct": 0.8,
+            "unit": "INR_PER_QT"
+          },
+          "Onion": {
+            "price_per_qt": 2743,
+            "yesterday_price": 2766,
+            "change_pct": -0.8,
+            "unit": "INR_PER_QT"
+          },
+          "Potato": {
+            "price_per_qt": 1660,
+            "yesterday_price": 1638,
+            "change_pct": 1.3,
+            "unit": "INR_PER_QT"
+          }
+        }
+      }
+    }
+  ]
+}

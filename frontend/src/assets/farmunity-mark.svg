@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" role="img" aria-label="Farmunity logo">
+  <circle cx="24" cy="24" r="24" fill="#16a34a"></circle>
+  <!-- stem -->
+  <path d="M24 28 V18" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"></path>
+  <!-- right leaf -->
+  <path d="M24 18c6 0 10-3 11-8c-6 0-11 3-11 8z" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path>
+  <!-- left leaf -->
+  <path d="M24 21c-6 0-10 3-11 8c6 0 11-3 11-8z" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>

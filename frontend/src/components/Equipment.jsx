@@ -1,23 +1,33 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Calendar, Clock, MapPin, Star, Users, Filter } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Calendar, Clock, MapPin, Star, Users, Filter, Search } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../services/api";
 
 export default function Equipment() {
-  // UI state
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedType, setSelectedType] = useState("rent");
+  // ===== Router =====
+  const navigate = useNavigate();
+  const loc = useLocation();
+  const params = new URLSearchParams(loc.search);
+  const initialCity = params.get("city") || "";
 
-  // Data state
+  // A reliable, royalty-free placeholder image
+  const EQUIPMENT_PLACEHOLDER =
+    "https://images.unsplash.com/photo-1594322436404-5f0390aa2f43?auto=format&fit=crop&w=1600&q=80";
+
+  // ===== UI state =====
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedType, setSelectedType] = useState("rent"); // reserved for later use
+  const [cityInput, setCityInput] = useState(initialCity);
+  const [selectedCity, setSelectedCity] = useState(initialCity);
+
+  // ===== Data state =====
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  const navigate = useNavigate();
-
-  // Categories (must match DB values)
+  // ===== Categories (must match DB values) =====
   const categories = useMemo(
     () => [
       { id: "All", name: "All Equipment" },
@@ -30,7 +40,7 @@ export default function Equipment() {
     []
   );
 
-  // Build API filter params
+  // ===== Build API filter params =====
   const filters = useMemo(
     () => ({
       page,
@@ -39,11 +49,12 @@ export default function Equipment() {
       ...(selectedCategory && selectedCategory !== "All"
         ? { category: selectedCategory }
         : {}),
+      ...(selectedCity ? { city: selectedCity } : {}),
     }),
-    [page, selectedCategory]
+    [page, selectedCategory, selectedCity]
   );
 
-  // Fetch data
+  // ===== Fetch data =====
   useEffect(() => {
     let cancel = false;
     setLoading(true);
@@ -64,7 +75,7 @@ export default function Equipment() {
     };
   }, [filters]);
 
-  // Realtime refresh via SSE (no-op if not supported)
+  // ===== Realtime refresh via SSE (no-op if not supported) =====
   useEffect(() => {
     const stop = api.openEquipmentStream?.(() => {
       api.getEquipment(filters).then((res) => {
@@ -81,6 +92,34 @@ export default function Equipment() {
   useEffect(() => {
     setPage(1);
   }, [selectedCategory]);
+
+  // ===== Handlers =====
+  function handleSearchCity(e) {
+    e?.preventDefault?.();
+    const next = cityInput.trim();
+    setSelectedCity(next);
+    setPage(1);
+    // Keep URL in sync (optional)
+    const qs = new URLSearchParams(loc.search);
+    if (next) qs.set("city", next);
+    else qs.delete("city");
+    navigate(
+      { pathname: "/equipment", search: qs.toString() ? `?${qs}` : "" },
+      { replace: true }
+    );
+  }
+
+  function clearCity() {
+    setCityInput("");
+    setSelectedCity("");
+    setPage(1);
+    const qs = new URLSearchParams(loc.search);
+    qs.delete("city");
+    navigate(
+      { pathname: "/equipment", search: qs.toString() ? `?${qs}` : "" },
+      { replace: true }
+    );
+  }
 
   // Book Now -> notify owner + open chat
   async function handleBookNow(item) {
@@ -103,9 +142,57 @@ export default function Equipment() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Equipment Rental Hub</h1>
           <p className="text-gray-600">Access modern farming equipment when you need it</p>
+        </div>
+
+        {/* Location Filter */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+          <div className="p-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Filter by Location</h3>
+            <form
+              onSubmit={handleSearchCity}
+              className="flex flex-col md:flex-row gap-3 md:items-center"
+            >
+              <div className="relative flex-1">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  value={cityInput}
+                  onChange={(e) => setCityInput(e.target.value)}
+                  className="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Enter city (e.g., Ludhiana, Bengaluru)"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Search className="h-4 w-4" />
+                  Search
+                </button>
+                {selectedCity && (
+                  <button
+                    type="button"
+                    onClick={clearCity}
+                    className="px-5 py-3 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </form>
+
+            {selectedCity && (
+              <div className="mt-3">
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-50 text-green-800 text-sm border border-green-200">
+                  <MapPin className="h-4 w-4" />
+                  {selectedCity}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Category Filters */}
@@ -144,7 +231,7 @@ export default function Equipment() {
         {/* Equipment Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {items.map((item) => {
-            const img = item.images?.[0] || "/placeholder.jpg";
+            const imgSrc = item.images?.[0] || EQUIPMENT_PLACEHOLDER;
             const priceDay = item.price?.day ?? 0;
             const priceWeek = item.price?.week ?? 0;
             const ownerName = item.owner?.name || "—";
@@ -152,13 +239,23 @@ export default function Equipment() {
               item.location?.city && item.location?.state
                 ? `${item.location.city}, ${item.location.state}`
                 : item.location?.city || item.location?.state || "—";
+
             return (
               <div
                 key={item.id}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
               >
                 <div className="relative">
-                  <img src={img} alt={item.title} className="w-full h-48 object-cover" />
+                  <img
+                    src={imgSrc}
+                    alt={item.title || "Farm equipment"}
+                    className="w-full h-48 object-cover bg-gray-100"
+                    onError={(e) => {
+                      // If the provided image fails, fall back to placeholder
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = EQUIPMENT_PLACEHOLDER;
+                    }}
+                  />
                   <div
                     className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
                       item.available ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
@@ -246,8 +343,6 @@ export default function Equipment() {
             </button>
           </div>
         )}
-
-        
       </div>
     </div>
   );

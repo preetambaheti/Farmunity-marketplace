@@ -399,7 +399,7 @@ export default function Knowledge() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
-        <div className="mb-8">
+        <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Knowledge & Advisory Hub
           </h1>
@@ -411,7 +411,7 @@ export default function Knowledge() {
         {/* Tab Navigation */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
           <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
+            <nav className="flex w-full flex-wrap justify-center items-center gap-8 px-6 sm:gap-10">
               <button
                 onClick={() => setActiveTab("chatbot")}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
