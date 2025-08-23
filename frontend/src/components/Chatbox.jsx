@@ -89,7 +89,7 @@ export default function ChatBox({ open, onClose, listing }) {
       setError("");
       setLoading(true);
       try {
-        // Try to enrich peer info from conversations list (best effort)
+        // Try to enrich peer info from conversations list
         try {
           const list = await api.getConversations();
           const match = (list.conversations || []).find((c) => c.id === routeId);
