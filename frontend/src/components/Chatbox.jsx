@@ -11,7 +11,7 @@ export default function ChatBox({ open, onClose, listing }) {
   const navigate = useNavigate();
 
   // State
-  const [conversation, setConversation] = useState(null); // { id, peer?, cropId? }
+  const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
