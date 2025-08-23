@@ -1,6 +1,7 @@
-# Ignore environment files
-# These files contain sensitive information like API keys and should not be version controlled.
+# Ignore environment files in the frontend directory
 frontend/.env
+
+# Ignore environment files in the backend directory
 backend/.env
 
 # General Node.js dependencies
