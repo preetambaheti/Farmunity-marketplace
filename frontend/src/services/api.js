@@ -16,13 +16,16 @@ export function authHeaders() {
 }
 
 // ---- Low-level request wrapper ----
+// Auto-sets JSON Content-Type unless the body is FormData
 async function req(path, options = {}) {
   let resp;
+
+  const isFormData = options?.body instanceof FormData;
+  const baseHeaders = isFormData ? {} : { "Content-Type": "application/json" };
+  const headers = { ...baseHeaders, ...(options.headers || {}) };
+
   try {
-    resp = await fetch(`${API_URL}${path}`, {
-      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-      ...options,
-    });
+    resp = await fetch(`${API_URL}${path}`, { ...options, headers });
   } catch (networkErr) {
     throw new Error(`Network error: ${networkErr.message}`);
   }
@@ -339,6 +342,50 @@ export const api = {
     const t = encodeURIComponent(type);
     return req(`/api/prices/today?state=${s}&type=${t}`);
   },
+
+  // ===============================
+  // === CERTIFICATION ENDPOINTS ===
+  // ===============================
+
+  /**
+   * Upload invoice + certificate files for a specific equipment.
+   * payload: { invoice: File, certificate: File, issuer?, certificateNo?, issueDate?, expiryDate? }
+   * NOTE: Do NOT set Content-Type manually; browser sets multipart boundary.
+   */
+  async uploadCerts(equipmentId, payload) {
+    const fd = new FormData();
+    fd.append("invoice", payload.invoice);
+    fd.append("certificate", payload.certificate);
+    if (payload.issuer) fd.append("issuer", payload.issuer);
+    if (payload.certificateNo) fd.append("certificateNo", payload.certificateNo);
+    if (payload.issueDate) fd.append("issueDate", payload.issueDate);
+    if (payload.expiryDate) fd.append("expiryDate", payload.expiryDate);
+
+    // Use direct fetch to avoid the JSON header; only auth header is added
+    const resp = await fetch(`${API_URL}/api/equipment/${equipmentId}/certs`, {
+      method: "POST",
+      headers: { ...(authHeaders()) }, // no Content-Type on purpose
+      body: fd,
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(data?.error || "Upload failed");
+    return data;
+  },
+
+  /** Admin: list all pending certification requests */
+  getPendingCerts: () =>
+    req("/api/admin/certs/pending", { headers: { ...authHeaders() } }),
+
+  /**
+   * Admin: approve or reject a specific equipment certification
+   * body: { approve: boolean, notes?, expiryDate? }
+   */
+  approveCert: (equipmentId, body) =>
+    req(`/api/admin/certs/${equipmentId}/approve`, {
+      method: "POST",
+      headers: { ...authHeaders() },
+      body: JSON.stringify(body),
+    }),
 };
 
 export default api;

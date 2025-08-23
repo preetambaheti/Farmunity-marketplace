@@ -8,13 +8,18 @@ from collections import defaultdict
 
 from bson import ObjectId, Decimal128
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify, g, Response
+from flask import Flask, request, jsonify, g, Response, send_from_directory
 from flask_cors import CORS
 from pymongo import MongoClient, ASCENDING, DESCENDING
+from pymongo.errors import ServerSelectionTimeoutError
 from db import mongo                           # <-- PyMongo instance from db.py
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from prices_today import bp as prices_today_bp  # <-- import is fine here (registration happens later)
+
+# ---- NEW: certification blueprint + admin seeder ----
+from certs import bp as certs_bp
+from seed_admin import ensure_admin
 
 # ---- Gemini (AI) ----
 # pip install google-generativeai
@@ -23,7 +28,7 @@ import google.generativeai as genai
 load_dotenv()
 
 # ---- Config ----
-MONGO_URI = os.getenv("MONGO_URI") or "mongodb://localhost:27017/farmunity"  # <-- safe default
+MONGO_URI = os.getenv("MONGO_URI")
 DB_NAME = os.getenv("DB_NAME", "farmunity")
 JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret")
 JWT_EXPIRE_DAYS = 7
@@ -41,54 +46,99 @@ app = Flask(__name__)
 # In production, lock origins to your exact frontend origin
 CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
+# ---- File uploads / static serving for certification docs ----
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")  # we'll store certs/invoices here
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["MAX_CONTENT_LENGTH"] = 6 * 1024 * 1024  # ~6 MB guardrail
+
+# Public route to serve uploaded files (supports subfolders via <path:filename>)
+@app.get("/uploads/<path:filename>")
+def serve_uploads(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
 # ---- PyMongo init for blueprints that use `from db import mongo` ----
 app.config["MONGO_URI"] = MONGO_URI
 mongo.init_app(app)  # <-- IMPORTANT: init before registering prices_today_bp
 
+# ---- Seed the single admin user once ----
+with app.app_context():
+    ensure_admin(mongo)
+
 # ---- Register blueprints AFTER mongo is initialized ----
 app.register_blueprint(prices_today_bp)
+app.register_blueprint(certs_bp)  # <--- certification endpoints
 
-# ---- Native pymongo (you already use this across the app) ----
-# It's okay to keep this in parallel; make sure it points to the same DB.
-client = MongoClient(MONGO_URI)
+# ---- Native pymongo (Atlas-safe init) ----
+if not MONGO_URI:
+    raise RuntimeError(
+        "MONGO_URI is missing. Example:\n"
+        "mongodb+srv://<user>:<pass>@farmunity.x7hhyxj.mongodb.net/farmunity"
+    )
+
+client = MongoClient(
+    MONGO_URI,
+    serverSelectionTimeoutMS=8000,   # fast fail if DNS/IP/auth is wrong
+    retryWrites=True,
+    w="majority",
+    appname="farmunity-api"
+)
+
+# Always select the DB explicitly; do NOT rely on defaults
+DB_NAME = DB_NAME or "farmunity"
 db = client[DB_NAME]
 
-users = db["users"]
-crops = db["crops"]
-conversations = db["conversations"]
-messages_col = db["messages"]
-equipment_col = db["equipment"]
-notifications = db["notifications"]
-bookings = db["bookings"]
-# NEW: AI chat sessions (per user)
-ai_sessions = db["ai_sessions"]
-# NEW: Community forum
-discussions = db["discussions"]
+# Fail fast if Atlas is unreachable / auth blocked
+try:
+    client.admin.command("ping")
+    print(f"✅ Connected to MongoDB Atlas · DB='{DB_NAME}'")
+except ServerSelectionTimeoutError as e:
+    raise RuntimeError(f"❌ Could not reach MongoDB Atlas: {e}") from e
+except Exception as e:
+    raise RuntimeError(f"❌ MongoDB Atlas auth/connection failed: {e}") from e
 
-# ---- Indexes (idempotent) ----
-users.create_index([("email", ASCENDING)], unique=True)
-crops.create_index([("createdAt", DESCENDING)])
-conversations.create_index([("participantHash", ASCENDING), ("cropId", ASCENDING)])
-messages_col.create_index([("conversationId", ASCENDING), ("createdAt", ASCENDING)])
+# Collections
+users           = db["users"]
+crops           = db["crops"]
+conversations   = db["conversations"]
+messages_col    = db["messages"]
+equipment_col   = db["equipment"]
+notifications   = db["notifications"]
+bookings        = db["bookings"]
+ai_sessions     = db["ai_sessions"]
+discussions     = db["discussions"]
+
+# ---- Indexes (idempotent & resilient) ----
+def safe_index(col, spec, **kwargs):
+    try:
+        col.create_index(spec, **kwargs)
+    except Exception as e:
+        print(f"[index] {col.name} {spec} -> {e}", flush=True)
+
+safe_index(users, [("email", ASCENDING)], unique=True)
+safe_index(crops, [("createdAt", DESCENDING)])
+safe_index(conversations, [("participantHash", ASCENDING), ("cropId", ASCENDING)])
+safe_index(messages_col, [("conversationId", ASCENDING), ("createdAt", ASCENDING)])
 
 # Equipment helpful indexes
-equipment_col.create_index([("category", ASCENDING)])
-equipment_col.create_index([("available", ASCENDING)])
-equipment_col.create_index([("location.city", ASCENDING)])
-equipment_col.create_index([("price.day", ASCENDING)])
-equipment_col.create_index([("rating", DESCENDING)])
-equipment_col.create_index([("title", "text"), ("features", "text")])
+safe_index(equipment_col, [("category", ASCENDING)])
+safe_index(equipment_col, [("available", ASCENDING)])
+safe_index(equipment_col, [("location.city", ASCENDING)])
+safe_index(equipment_col, [("price.day", ASCENDING)])
+safe_index(equipment_col, [("rating", DESCENDING)])
+safe_index(equipment_col, [("title", "text"), ("features", "text")])
 
 # Notifications / bookings indexes
-notifications.create_index([("userId", ASCENDING), ("createdAt", DESCENDING)])
-bookings.create_index([("equipmentId", ASCENDING), ("createdAt", DESCENDING)])
+safe_index(notifications, [("userId", ASCENDING), ("createdAt", DESCENDING)])
+safe_index(bookings, [("equipmentId", ASCENDING), ("createdAt", DESCENDING)])
 
 # AI session indexes
-ai_sessions.create_index([("userId", ASCENDING), ("updatedAt", DESCENDING)])
+safe_index(ai_sessions, [("userId", ASCENDING), ("updatedAt", DESCENDING)])
 
 # NEW: forum indexes
-discussions.create_index([("createdAt", DESCENDING)])
-discussions.create_index([("title", "text"), ("text", "text"), ("category", "text")])
+safe_index(discussions, [("createdAt", DESCENDING)])
+safe_index(discussions, [("title", "text"), ("text", "text"), ("category", "text")])
 
 # ---- Helpers ----
 def oid(x):
@@ -96,6 +146,45 @@ def oid(x):
 
 def oid_str(x):
     return str(x) if isinstance(x, ObjectId) else x
+
+# ---- NEW: JWT user attach so certs.py can use request.user ----
+def decode_jwt_from_request():
+    """Read Bearer token, decode, and return user dict (or None)."""
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return None
+    token = auth.split(" ", 1)[1].strip()
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+    except Exception:
+        return None
+
+    # IMPORTANT: accept our current 'sub' claim (and fall back to 'uid' if present)
+    uid = payload.get("sub") or payload.get("uid")
+    if not uid:
+        return None
+
+    try:
+        u = users.find_one({"_id": oid(uid)}, {"password": 0})
+    except Exception:
+        return None
+    if not u:
+        return None
+
+    # Convert ObjectId to string for JSON safety
+    u["_id"] = str(u["_id"])
+    return {"_id": u["_id"], "email": u.get("email"), "role": u.get("role", "buyer"), "name": u.get("name")}
+
+@app.before_request
+def attach_request_user():
+    """
+    Populate request.user for downstream blueprints (e.g., certs.py).
+    Falls back to None if no/invalid token.
+    """
+    user = decode_jwt_from_request()
+    # Attach to request (as used by certs.py) and also to flask.g
+    setattr(request, "user", user)
+    g.user = user
 
 def _json_default(o):
     if isinstance(o, ObjectId):
@@ -304,6 +393,14 @@ def ai_history_to_gemini(history):
 def health():
     return {"status": "ok"}
 
+@app.get("/api/health/db")
+def health_db():
+    try:
+        client.admin.command("ping")
+        return {"ok": True, "db": DB_NAME}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}, 500
+
 # ---- Auth ----
 @app.post("/api/auth/signup")
 def signup():
@@ -356,7 +453,7 @@ def login():
         return jsonify({"error": "Invalid credentials"}), 401
 
     # normalize any legacy roles to lowercase
-    if user.get("role") not in ["farmer", "buyer"]:
+    if user.get("role") not in ["farmer", "buyer", "admin"]:
         users.update_one({"_id": user["_id"]}, {"$set": {"role": (user.get("role") or "").lower()}})
         user = users.find_one({"_id": user["_id"]})
 
@@ -567,19 +664,6 @@ def delete_crop(id):
     crops.delete_one({"_id": doc["_id"]})
     return jsonify({"ok": True})
 
-# (Optional) Realtime crops stream if Mongo change streams are available
-# @app.get("/api/crops/stream")
-# def crops_stream():
-#     def gen():
-#         try:
-#             with crops.watch(full_document='updateLookup') as stream:
-#                 for change in stream:
-#                     payload = serialize_crop(to_jsonable(change.get("fullDocument", {})))
-#                     yield f"data: {json.dumps(payload)}\n\n"
-#         except Exception:
-#             yield "event: error\ndata: {}\n\n"
-#     return Response(gen(), mimetype="text/event-stream")
-
 # ---- Dashboard summary (protected) ----
 @app.get("/api/dashboard/summary")
 @token_required
@@ -710,6 +794,9 @@ def create_equipment():
 
     if not doc["title"] or not doc["category"]:
         return jsonify({"error": "title and category are required"}), 400
+
+    # Debug log (optional)
+    print("CREATE_EQUIPMENT payload=", doc, flush=True)
 
     res = equipment_col.insert_one(doc)
     doc["_id"] = res.inserted_id
@@ -1211,6 +1298,9 @@ def ai_ask():
 
     return jsonify({"sessionId": str(session["_id"]), "reply": answer})
 
+# =============================
+#           WEATHER
+# =============================
 def _owm_request(endpoint, params):
     if not OPENWEATHER_API_KEY:
         raise RuntimeError("OPENWEATHER_API_KEY missing")
@@ -1339,103 +1429,6 @@ def ai_delete_session(sid):
         return jsonify({"error": "Not found"}), 404
     ai_sessions.delete_one({"_id": s["_id"]})
     return jsonify({"ok": True})
-
-# =============================
-#           WEATHER
-# =============================
-
-@app.get("/api/weather/now")
-def weather_now():
-    """
-    Query: lat, lon OR q="City,CountryCode"
-    Returns current weather + 3-day aggregated forecast.
-    """
-    lat = request.args.get("lat")
-    lon = request.args.get("lon")
-    q = (request.args.get("q") or "").strip() or None
-
-    key = f"{lat},{lon}" if lat and lon else f"q:{q}"
-    
-    try:
-        cur = _resolve_current(lat, lon, q)
-        fc = _resolve_forecast(lat, lon, q)
-    except Exception as e:
-        return jsonify({"error": f"weather fetch failed: {e}"}), 502
-
-    location = _format_location_from_owm(cur)
-    w = (cur.get("weather") or [{}])[0]
-    main = cur.get("main") or {}
-    wind = cur.get("wind") or {}
-    rain = (cur.get("rain") or {}).get("1h") or (cur.get("rain") or {}).get("3h")  # may be None
-
-    current = {
-        "tempC": round(main.get("temp"), 1) if main.get("temp") is not None else None,
-        "feelsLikeC": round(main.get("feels_like"), 1) if main.get("feels_like") is not None else None,
-        "humidity": main.get("humidity"),
-        "pressure": main.get("pressure"),
-        "wind_mps": wind.get("speed"),
-        "clouds": (cur.get("clouds") or {}).get("all"),
-        "description": w.get("description"),
-        "icon": w.get("icon"),
-        "rain_mm": rain if isinstance(rain, (int, float)) else 0.0,
-    }
-
-    forecast3d = _aggregate_3days(fc)
-
-    payload = {
-        "location": location,
-        "current": current,
-        "forecast3d": forecast3d,
-        "fetchedAt": datetime.utcnow().isoformat()
-    }
-
-    return jsonify(payload)
-
-@app.get("/api/weather/advisory")
-@token_optional
-def weather_advisory():
-    """
-    Builds a short, actionable farming advisory using Gemini
-    from the next 3 days of forecast.
-    Query: lat, lon OR q
-    """
-    lat = request.args.get("lat")
-    lon = request.args.get("lon")
-    q = (request.args.get("q") or "").strip() or None
-
-    # First, get the forecast (reuse logic)
-    try:
-        fc = _resolve_forecast(lat, lon, q)
-        cur = _resolve_current(lat, lon, q)
-    except Exception as e:
-        return jsonify({"error": f"weather fetch failed: {e}"}), 502
-
-    location = _format_location_from_owm(cur)
-    forecast3d = _aggregate_3days(fc)
-
-    # Build prompt for Gemini (personalized)
-    system_prompt = build_system_prompt(g.current_user)
-    model = genai.GenerativeModel(model_name=GEMINI_MODEL, system_instruction=system_prompt)
-
-    prompt = (
-        "You are generating a SHORT, practical farming advisory for the next 3 days based on weather.\n"
-        "Keep it in 3–5 bullets, very actionable (irrigation, spraying, harvesting, sowing, protection).\n"
-        "Use the farmer's preferred language. Mention units in °C and mm. Avoid fluff.\n\n"
-        f"Location: {location.get('display')}\n"
-        f"Forecast (next 3 days JSON): {json.dumps(forecast3d, ensure_ascii=False)}\n"
-    )
-
-    try:
-        resp = model.generate_content(prompt, generation_config=GENERATION_CONFIG)
-        advice = (resp.text or "").strip()
-    except Exception as e:
-        return jsonify({"error": f"Gemini error: {e}"}), 500
-
-    return jsonify({
-        "location": location,
-        "forecast3d": forecast3d,
-        "advisory": advice
-    })
 
 # ---- Main ----
 if __name__ == "__main__":

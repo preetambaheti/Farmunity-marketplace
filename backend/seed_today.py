@@ -3,7 +3,7 @@ import json, os, sys
 from datetime import date
 from pymongo import MongoClient, ASCENDING
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/farmunity")
+MONGO_URI = os.getenv("MONGO_URI")
 DB_NAME   = os.getenv("DB_NAME", "farmunity")
 JSON_PATH = sys.argv[1] if len(sys.argv) > 1 else "state_prices_today.json"
 

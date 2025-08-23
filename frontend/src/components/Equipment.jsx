@@ -3,6 +3,96 @@ import { Calendar, Clock, MapPin, Star, Users, Filter, Search } from "lucide-rea
 import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../services/api";
 
+// ---------- Small inline components for Certification UI ----------
+function CertBadge({ status }) {
+  if (!status || status === "none") return null;
+  const map = {
+    certified: "bg-green-100 text-green-800",
+    pending: "bg-yellow-100 text-yellow-800",
+    rejected: "bg-red-100 text-red-800",
+    expired: "bg-gray-200 text-gray-700",
+  };
+  const label = status[0].toUpperCase() + status.slice(1);
+  return (
+    <span className={`px-2 py-0.5 text-xs rounded-full ${map[status] || "bg-gray-100 text-gray-700"}`}>
+      {label}
+    </span>
+  );
+}
+
+function CertificateModal({ open, onClose, cert }) {
+  if (!open || !cert) return null;
+  const doc = cert?.documents?.find((d) => d.type === "certificate");
+  const inv = cert?.documents?.find((d) => d.type === "invoice");
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+      <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold">Certification Details</h3>
+          <button
+            aria-label="Close"
+            onClick={onClose}
+            className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <div className="text-zinc-500">Issuer</div>
+            <div>{cert.issuer || "—"}</div>
+          </div>
+          <div>
+            <div className="text-zinc-500">Certificate No.</div>
+            <div>{cert.certificateNo || "—"}</div>
+          </div>
+          <div>
+            <div className="text-zinc-500">Issue Date</div>
+            <div>{cert.issueDate || "—"}</div>
+          </div>
+          <div>
+            <div className="text-zinc-500">Expiry Date</div>
+            <div>{cert.expiryDate || "—"}</div>
+          </div>
+          <div>
+            <div className="text-zinc-500">Status</div>
+            <div className="capitalize">{cert.status || "—"}</div>
+          </div>
+          <div>
+            <div className="text-zinc-500">Verified By</div>
+            <div>{cert.verifiedBy ? "Admin" : "—"}</div>
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-4">
+          {doc?.url && (
+            <a
+              className="px-3 py-2 rounded-lg border hover:bg-gray-50"
+              href={doc.url}
+              target="_blank"
+              rel="noreferrer"
+            >
+              View Certificate
+            </a>
+          )}
+          {inv?.url && (
+            <a
+              className="px-3 py-2 rounded-lg border hover:bg-gray-50"
+              href={inv.url}
+              target="_blank"
+              rel="noreferrer"
+            >
+              View Invoice
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+// -------------------------------------------------------------------
+
 export default function Equipment() {
   // ===== Router =====
   const navigate = useNavigate();
@@ -16,7 +106,7 @@ export default function Equipment() {
 
   // ===== UI state =====
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedType, setSelectedType] = useState("rent"); // reserved for later use
+  const [selectedType, setSelectedType] = useState("rent");
   const [cityInput, setCityInput] = useState(initialCity);
   const [selectedCity, setSelectedCity] = useState(initialCity);
 
@@ -26,6 +116,9 @@ export default function Equipment() {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+
+  // ===== Cert modal state =====
+  const [openCert, setOpenCert] = useState(null);
 
   // ===== Categories (must match DB values) =====
   const categories = useMemo(
@@ -46,9 +139,7 @@ export default function Equipment() {
       page,
       limit: 12,
       sort: "rating:desc",
-      ...(selectedCategory && selectedCategory !== "All"
-        ? { category: selectedCategory }
-        : {}),
+      ...(selectedCategory && selectedCategory !== "All" ? { category: selectedCategory } : {}),
       ...(selectedCity ? { city: selectedCity } : {}),
     }),
     [page, selectedCategory, selectedCity]
@@ -103,10 +194,7 @@ export default function Equipment() {
     const qs = new URLSearchParams(loc.search);
     if (next) qs.set("city", next);
     else qs.delete("city");
-    navigate(
-      { pathname: "/equipment", search: qs.toString() ? `?${qs}` : "" },
-      { replace: true }
-    );
+    navigate({ pathname: "/equipment", search: qs.toString() ? `?${qs}` : "" }, { replace: true });
   }
 
   function clearCity() {
@@ -115,10 +203,7 @@ export default function Equipment() {
     setPage(1);
     const qs = new URLSearchParams(loc.search);
     qs.delete("city");
-    navigate(
-      { pathname: "/equipment", search: qs.toString() ? `?${qs}` : "" },
-      { replace: true }
-    );
+    navigate({ pathname: "/equipment", search: qs.toString() ? `?${qs}` : "" }, { replace: true });
   }
 
   // Book Now -> notify owner + open chat
@@ -131,6 +216,7 @@ export default function Equipment() {
         return;
       }
       navigate(`/chat/${id}`);
+      // Ensure page scrolls to top when route changes
       requestAnimationFrame(() => window.scrollTo(0, 0));
     } catch (e) {
       alert(e.message || "Could not send booking request");
@@ -151,10 +237,7 @@ export default function Equipment() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
           <div className="p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Filter by Location</h3>
-            <form
-              onSubmit={handleSearchCity}
-              className="flex flex-col md:flex-row gap-3 md:items-center"
-            >
+            <form onSubmit={handleSearchCity} className="flex flex-col md:flex-row gap-3 md:items-center">
               <div className="relative flex-1">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
@@ -240,6 +323,8 @@ export default function Equipment() {
                 ? `${item.location.city}, ${item.location.state}`
                 : item.location?.city || item.location?.state || "—";
 
+            const certStatus = item.certification?.status; // "certified" | "pending" | "rejected" | "expired" | undefined
+
             return (
               <div
                 key={item.id}
@@ -251,7 +336,6 @@ export default function Equipment() {
                     alt={item.title || "Farm equipment"}
                     className="w-full h-48 object-cover bg-gray-100"
                     onError={(e) => {
-                      // If the provided image fails, fall back to placeholder
                       e.currentTarget.onerror = null;
                       e.currentTarget.src = EQUIPMENT_PLACEHOLDER;
                     }}
@@ -273,11 +357,14 @@ export default function Equipment() {
                       </h3>
                       <p className="text-sm text-gray-600">by {ownerName}</p>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-medium text-gray-700">
-                        {item.rating ?? "—"}
-                      </span>
+                    <div className="flex items-center gap-2">
+                      {certStatus && <CertBadge status={certStatus} />}
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm font-medium text-gray-700">
+                          {item.rating ?? "—"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -286,7 +373,7 @@ export default function Equipment() {
                     {location}
                   </div>
 
-                  {!!(item.features?.length) && (
+                  {!!item.features?.length && (
                     <div className="mb-4">
                       <div className="text-sm text-gray-600 mb-2">Features:</div>
                       <div className="flex flex-wrap gap-2">
@@ -311,6 +398,17 @@ export default function Equipment() {
                         ₹{Number(priceWeek).toLocaleString()}/week
                       </div>
                     </div>
+
+                    {/* View Certificate only when there is a certification object */}
+                    {item.certification && (
+                      <button
+                        type="button"
+                        className="text-sm underline text-blue-600"
+                        onClick={() => setOpenCert(item.certification)}
+                      >
+                        View Certificate
+                      </button>
+                    )}
                   </div>
 
                   <div className="flex gap-3">
@@ -334,16 +432,12 @@ export default function Equipment() {
 
         {/* Pagination */}
         {!loading && hasMore && (
-          <div className="flex justify-center mt-8">
-            <button
-              onClick={() => setPage((p) => p + 1)}
-              className="px-6 py-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50"
-            >
-              Load more
-            </button>
-          </div>
+          <div className="flex justify-center mt-8"></div>
         )}
       </div>
+
+      {/* Global certificate modal */}
+      <CertificateModal open={!!openCert} onClose={() => setOpenCert(null)} cert={openCert} />
     </div>
   );
 }

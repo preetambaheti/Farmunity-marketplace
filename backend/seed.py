@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 from datetime import datetime
 
-client = MongoClient("mongodb://localhost:27017/farmunity")
+client = MongoClient(MONGO_URI)
 db = client.get_database()
 
 db.price_snapshots.delete_many({})

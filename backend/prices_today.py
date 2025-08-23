@@ -1,7 +1,7 @@
 # backend/prices_today.py
 from flask import Blueprint, request, jsonify
 from datetime import date
-from db import mongo  # PyMongo instance initialized in app.py via mongo.init_app(app)
+from db import mongo 
 
 bp = Blueprint("prices_today", __name__)
 
