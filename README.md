@@ -2,6 +2,7 @@
 
 Farmunity is a digital ecosystem platform built for farmers and buyers to ensure fair crop pricing, easy equipment access, and seamless trade communication. It empowers farmers by providing transparency, efficiency, and sustainability in agriculture.
 
+
 🚀 Features
 
 👨‍🌾 Farmer & Buyer Roles – Separate login/signup for farmers and buyers.
@@ -16,6 +17,7 @@ Farmunity is a digital ecosystem platform built for farmers and buyers to ensure
 
 📊 Dashboard – Track sales, orders, listings, and ratings.
 
+
 🛠️ Tech Stack
 
 Frontend: React + Tailwind CSS
@@ -28,6 +30,7 @@ Auth: JWT Authentication
 
 Hosting: Render / Vercel
 
+
 📂 Collections (MongoDB)
 
 users → Farmers, Buyers (roles, profile details, auth)
@@ -39,6 +42,7 @@ equipment → Equipment rental/sharing data
 bookings → Crop/Equipment booking records
 
 state_prices_today → Daily wholesale/retail crop prices
+
 
 ▶️ Getting Started
 # Clone repo
@@ -54,6 +58,7 @@ flask run
 cd frontend
 npm install
 npm run dev
+
 
 🌍 Vision
 
