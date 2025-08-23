@@ -5,7 +5,7 @@ python-dotenv
 gunicorn
 werkzeug
 requests
-bson
 PyJWT
 google-generativeai
+dnspython
 flask-pymongo
