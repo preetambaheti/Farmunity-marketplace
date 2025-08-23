@@ -1,6 +1,10 @@
-Flask==3.0.3
-flask-cors==4.0.0
-pymongo==4.8.0
-python-dotenv==1.0.1
-PyJWT==2.9.0
+flask
+flask-cors
+pymongo
+python-dotenv
 gunicorn
+werkzeug
+requests
+bson
+PyJWT
+google-generativeai
