@@ -8,7 +8,7 @@ import Knowledge from "./components/Knowledge";
 import Dashboard from "./components/Dashboard";
 import Footer from "./components/Footer";
 import Auth from "./components/Auth";
-import Chatbox from "./components/Chatbox";
+import ChatBox from "./components/ChatBox";
 import { getAuth, clearAuth } from "./services/api";
 import {
   Routes,
