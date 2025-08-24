@@ -5,26 +5,21 @@ import { useNavigate } from "react-router-dom";
 export default function Homepage({ onNavigate }) {
   const navigate = useNavigate();
 
-  // Simple helper: navigate + optional legacy onNavigate callback
   const go = (path, slug) => {
     try {
-      if (typeof onNavigate === "function") {
-        onNavigate(slug || path.replace("/", ""));
-      }
+      if (typeof onNavigate === "function") onNavigate(slug || path.replace("/", ""));
     } catch {}
     navigate(path);
   };
 
   // ---- Hero slider (remote image URLs) ----
   const heroImages = [
-    // ⬇️ Replace these with your own remote image links
     "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2400&auto=format&fit=crop",
     "https://images.unsplash.com/photo-1464226184884-fa280b87c399?q=80&w=2400&auto=format&fit=crop",
     "https://images.unsplash.com/photo-1492496913980-501348b61469?q=80&w=2400&auto=format&fit=crop",
   ];
   const [slide, setSlide] = useState(0);
 
-  // Preload images
   useEffect(() => {
     heroImages.forEach((src) => {
       const img = new Image();
@@ -32,24 +27,20 @@ export default function Homepage({ onNavigate }) {
     });
   }, [heroImages]);
 
-  // Auto-advance (kept same speed; respects reduced motion)
   useEffect(() => {
     if (!heroImages.length) return;
     const prefersReduced =
       window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
     if (prefersReduced) return;
-    const t = setInterval(
-      () => setSlide((i) => (i + 1) % heroImages.length),
-      5000
-    );
+    const t = setInterval(() => setSlide((i) => (i + 1) % heroImages.length), 5000);
     return () => clearInterval(t);
   }, [heroImages.length]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       {/* ===== Hero Section (slider) ===== */}
-      {/* Heights are EXACTLY your original desktop settings */}
-      <div className="relative h-[520px] sm:h-[560px] lg:h-[620px] overflow-hidden text-white">
+      {/* mt-16 ensures content starts below the fixed header */}
+      <div className="relative text-white overflow-hidden min-h-[520px] sm:mt-0">
         {/* Slides */}
         {heroImages.map((src, i) => (
           <img
@@ -63,12 +54,12 @@ export default function Homepage({ onNavigate }) {
           />
         ))}
 
-        {/* Subtle, uniform overlay (no transparent-navbar gradient) */}
+        {/* Uniform overlay, non-interactive */}
         <div className="absolute inset-0 bg-black/30 md:bg-black/20 lg:bg-black/10 pointer-events-none" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 h-full flex items-center">
-          <div className="text-center w-full">
-            {/* Desktop typography unchanged */}
+        {/* Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 lg:py-24">
+          <div className="text-center w-full pb-14 sm:pb-10">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Empowering Farmers with Fair Prices,
               <br className="hidden md:block" />
@@ -80,7 +71,6 @@ export default function Homepage({ onNavigate }) {
               expert guidance.
             </p>
 
-            {/* CTA Buttons (your original mobile behavior kept: full width on xs, inline on sm+) */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button
                 onClick={() => go("/marketplace", "marketplace")}
@@ -112,8 +102,8 @@ export default function Homepage({ onNavigate }) {
           </div>
         </div>
 
-        {/* Dots (unchanged) */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+        {/* Dots — nudged a bit lower on md+, but kept clear of CTAs on mobile */}
+        <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2">
           {heroImages.map((_, i) => (
             <button
               key={i}
@@ -140,7 +130,6 @@ export default function Homepage({ onNavigate }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {/* Direct Market Access */}
           <div className="text-center p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <TrendingUp className="h-8 w-8 text-green-600" />
@@ -160,7 +149,6 @@ export default function Homepage({ onNavigate }) {
             </button>
           </div>
 
-          {/* Equipment Sharing */}
           <div className="text-center p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Truck className="h-8 w-8 text-green-600" />
@@ -180,7 +168,6 @@ export default function Homepage({ onNavigate }) {
             </button>
           </div>
 
-          {/* Expert Guidance */}
           <div className="text-center p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <BookOpen className="h-8 w-8 text-green-600" />

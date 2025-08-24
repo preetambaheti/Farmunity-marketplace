@@ -1,7 +1,7 @@
 // frontend/src/services/api.js
 
 // ---- Base URL ----
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // ---- Auth header helper ----
 export function authHeaders() {

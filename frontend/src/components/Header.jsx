@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Menu, User } from "lucide-react";
 import FarmunityMark from "../assets/farmunity-mark.svg";
 
@@ -13,12 +13,11 @@ export default function Header({
 }) {
   const isFarmer = isAuthed && user?.role === "farmer";
 
-  // --- Always dark navbar (no transparent variant) ---
+  // --- Always dark navbar ---
   const headerBg = "bg-zinc-900/95";
   const headerBorder = "border-zinc-800";
   const shadow = "shadow-sm";
 
-  // Text/CTA styles
   const brandText = "text-white";
   const linkText = "text-zinc-200";
   const linkHover = "hover:text-green-200";
@@ -106,10 +105,11 @@ export default function Header({
 
             {/* Right side */}
             <div className="flex items-center space-x-3">
+              {/* Hide profile/dashboard icon on mobile; keep on md+ */}
               {isFarmer && (
                 <button
                   onClick={() => go("dashboard")}
-                  className={`p-2 sm:p-2.5 rounded-full transition-colors ${iconColor} ${iconHover} bg-white/10 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500/70`}
+                  className={`hidden md:inline-flex p-2 rounded-full transition-colors ${iconColor} ${iconHover} bg-white/10 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500/70`}
                   aria-label="Open dashboard"
                   title="Dashboard"
                 >
@@ -145,7 +145,9 @@ export default function Header({
         <div
           id="mobile-menu"
           className={`md:hidden border-t border-zinc-800 bg-zinc-900/95 text-white transition-[opacity,transform] duration-200 ${
-            isMenuOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 -translate-y-2"
+            isMenuOpen
+              ? "opacity-100 translate-y-0"
+              : "pointer-events-none opacity-0 -translate-y-2"
           }`}
         >
           {isMenuOpen && (
@@ -168,6 +170,7 @@ export default function Header({
                 );
               })}
 
+              {/* Keep dashboard link in the drawer if you want it there too */}
               {isFarmer && (
                 <button
                   onClick={() => go("dashboard")}
@@ -205,8 +208,8 @@ export default function Header({
         </div>
       </header>
 
-      {/* Spacer so content never hides under fixed header */}
-      <div className="h-16" aria-hidden />
+      {/* Spacer */}
+      <div className="h-0 md:h-16" aria-hidden />
     </>
   );
 }
