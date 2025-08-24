@@ -11,42 +11,47 @@ export default function Header({
   onLogout,
   user,
 }) {
-  const [scrolled, setScrolled] = useState(false);
   const isFarmer = isAuthed && user?.role === "farmer";
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 16);
-    onScroll();
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // Transparent only on Home when not scrolled; otherwise dark
-  const isHeroGlass = currentPage === "home" && !scrolled;
-  const isDark = !isHeroGlass; // dark on non-home or once scrolled on home
-
-  const headerBg = isHeroGlass ? "bg-transparent" : "bg-zinc-900/95";
-  const headerBorder = isHeroGlass ? "border-transparent" : "border-zinc-800";
-  const shadow = isDark ? "shadow-sm" : "shadow-none";
+  // --- Always dark navbar (no transparent variant) ---
+  const headerBg = "bg-zinc-900/95";
+  const headerBorder = "border-zinc-800";
+  const shadow = "shadow-sm";
 
   // Text/CTA styles
-  const brandText = isHeroGlass ? "text-white" : "text-white";
-  const linkText = isHeroGlass ? "text-white/85" : "text-zinc-200";
+  const brandText = "text-white";
+  const linkText = "text-zinc-200";
   const linkHover = "hover:text-green-200";
   const activeText = "text-white";
   const activeBg = "bg-white/10";
 
   const ctaBase =
-    "px-4 py-2 text-sm font-medium rounded-md transition-colors border";
-  const loginBtn = isDark
-    ? `${ctaBase} border-green-600 bg-green-600 text-white hover:bg-green-700`
-    : `${ctaBase} border-white/40 bg-white/10 text-white hover:bg-white/20`;
-  const logoutBtn = isDark
-    ? `${ctaBase} border-white/30 bg-white/10 text-white hover:bg-white/20`
-    : `${ctaBase} border-white/40 bg-white/10 text-white hover:bg-white/20`;
+    "px-4 py-2 text-sm font-medium rounded-md transition-colors border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500/70";
+  const loginBtn = `${ctaBase} border-green-600 bg-green-600 text-white hover:bg-green-700`;
+  const logoutBtn = `${ctaBase} border-white/30 bg-white/10 text-white hover:bg-white/20`;
 
   const iconColor = "text-white";
   const iconHover = "hover:text-green-200";
+
+  // Lock page scroll when the mobile menu is open
+  useEffect(() => {
+    const el = document.documentElement;
+    if (isMenuOpen) {
+      const prev = el.style.overflow;
+      el.style.overflow = "hidden";
+      return () => {
+        el.style.overflow = prev || "";
+      };
+    }
+  }, [isMenuOpen]);
+
+  // Helper: navigate and close mobile menu if open
+  const go = (key) => {
+    onNavigate?.(key);
+    if (isMenuOpen) onMenuToggle?.();
+  };
+
+  const navItems = ["home", "marketplace", "equipment", "knowledge"];
 
   return (
     <>
@@ -56,10 +61,10 @@ export default function Header({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <div className="flex items-center">
+            <div className="flex items-center min-w-0">
               <button
-                onClick={() => onNavigate("home")}
-                className="flex-shrink-0 flex items-center group"
+                onClick={() => go("home")}
+                className="flex-shrink-0 flex items-center group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500/70 rounded-md"
                 aria-label="Go to home"
                 title="Farmunity"
               >
@@ -80,17 +85,18 @@ export default function Header({
 
             {/* Desktop nav */}
             <nav className="hidden md:flex space-x-2">
-              {["home", "marketplace", "equipment", "knowledge"].map((key) => {
+              {navItems.map((key) => {
                 const isActive = currentPage === key;
                 return (
                   <button
                     key={key}
-                    onClick={() => onNavigate(key)}
-                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    onClick={() => go(key)}
+                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500/70 ${
                       isActive
                         ? `${activeText} ${activeBg}`
                         : `${linkText} ${linkHover}`
                     }`}
+                    aria-current={isActive ? "page" : undefined}
                   >
                     {key.charAt(0).toUpperCase() + key.slice(1)}
                   </button>
@@ -102,10 +108,8 @@ export default function Header({
             <div className="flex items-center space-x-3">
               {isFarmer && (
                 <button
-                  onClick={() => onNavigate("dashboard")}
-                  className={`p-2 rounded-full transition-colors ${iconColor} ${iconHover} ${
-                    isDark ? "bg-white/10 hover:bg-white/20" : "bg-white/10"
-                  }`}
+                  onClick={() => go("dashboard")}
+                  className={`p-2 sm:p-2.5 rounded-full transition-colors ${iconColor} ${iconHover} bg-white/10 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500/70`}
                   aria-label="Open dashboard"
                   title="Dashboard"
                 >
@@ -114,7 +118,7 @@ export default function Header({
               )}
 
               {!isAuthed ? (
-                <button onClick={() => onNavigate("login")} className={loginBtn}>
+                <button onClick={() => go("login")} className={loginBtn}>
                   Login
                 </button>
               ) : (
@@ -123,10 +127,13 @@ export default function Header({
                 </button>
               )}
 
+              {/* Mobile menu button */}
               <button
                 onClick={onMenuToggle}
-                className={`md:hidden transition-colors ${iconColor} ${iconHover} p-2 rounded-md`}
+                className={`md:hidden transition-colors ${iconColor} ${iconHover} p-2 sm:p-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500/70`}
                 aria-label="Toggle menu"
+                aria-expanded={isMenuOpen ? "true" : "false"}
+                aria-controls="mobile-menu"
               >
                 <Menu className="h-6 w-6" />
               </button>
@@ -135,24 +142,26 @@ export default function Header({
         </div>
 
         {/* Mobile menu */}
-        {isMenuOpen && (
-          <div
-            className={`md:hidden border-t ${
-              isDark
-                ? "bg-zinc-900/95 text-white border-zinc-800"
-                : "bg-zinc-900/90 text-white border-transparent"
-            }`}
-          >
+        <div
+          id="mobile-menu"
+          className={`md:hidden border-t border-zinc-800 bg-zinc-900/95 text-white transition-[opacity,transform] duration-200 ${
+            isMenuOpen ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 -translate-y-2"
+          }`}
+        >
+          {isMenuOpen && (
             <div className="px-2 pt-2 pb-3 space-y-1">
-              {["home", "marketplace", "equipment", "knowledge"].map((key) => {
+              {navItems.map((key) => {
                 const isActive = currentPage === key;
                 return (
                   <button
                     key={key}
-                    onClick={() => onNavigate(key)}
-                    className={`block w-full text-left px-3 py-2 text-base font-medium rounded-md transition-colors ${
-                      isActive ? "bg-white/10 text-white" : "text-white/90 hover:bg-white/10"
+                    onClick={() => go(key)}
+                    className={`block w-full text-left px-3 py-2 text-base font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500/70 ${
+                      isActive
+                        ? "bg-white/10 text-white"
+                        : "text-white/90 hover:bg-white/10"
                     }`}
+                    aria-current={isActive ? "page" : undefined}
                   >
                     {key.charAt(0).toUpperCase() + key.slice(1)}
                   </button>
@@ -161,8 +170,8 @@ export default function Header({
 
               {isFarmer && (
                 <button
-                  onClick={() => onNavigate("dashboard")}
-                  className={`block w-full text-left px-3 py-2 text-base font-medium rounded-md transition-colors ${
+                  onClick={() => go("dashboard")}
+                  className={`block w-full text-left px-3 py-2 text-base font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500/70 ${
                     currentPage === "dashboard"
                       ? "bg-white/10 text-white"
                       : "text-white/90 hover:bg-white/10"
@@ -174,27 +183,30 @@ export default function Header({
 
               {!isAuthed && (
                 <button
-                  onClick={() => onNavigate("login")}
-                  className="block w-full text-left px-3 py-2 text-base font-medium rounded-md transition-colors text-white hover:bg-white/10"
+                  onClick={() => go("login")}
+                  className="block w-full text-left px-3 py-2 text-base font-medium rounded-md transition-colors text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500/70"
                 >
                   Login
                 </button>
               )}
               {isAuthed && (
                 <button
-                  onClick={onLogout}
-                  className="block w-full text-left px-3 py-2 text-base font-medium rounded-md transition-colors text-white hover:bg-white/10"
+                  onClick={() => {
+                    onLogout?.();
+                    if (isMenuOpen) onMenuToggle?.();
+                  }}
+                  className="block w-full text-left px-3 py-2 text-base font-medium rounded-md transition-colors text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500/70"
                 >
                   Logout
                 </button>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </header>
 
-      {/* Spacer so fixed header never overlaps content when not transparent */}
-      {isDark && <div className="h-16" aria-hidden />}
+      {/* Spacer so content never hides under fixed header */}
+      <div className="h-16" aria-hidden />
     </>
   );
 }

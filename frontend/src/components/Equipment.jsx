@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Calendar, Clock, MapPin, Star, Users, Filter, Search } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../services/api";
+import ChatBox from "./ChatBox";
+
 
 // ---------- Small inline components for Certification UI ----------
 function CertBadge({ status }) {
@@ -25,10 +27,10 @@ function CertificateModal({ open, onClose, cert }) {
   const doc = cert?.documents?.find((d) => d.type === "certificate");
   const inv = cert?.documents?.find((d) => d.type === "invoice");
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
-      <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-2xl p-6">
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-3 sm:p-0">
+      <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-2xl p-4 sm:p-6 max-h-[80vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold">Certification Details</h3>
+          <h3 className="text-base sm:text-lg font-semibold">Certification Details</h3>
           <button
             aria-label="Close"
             onClick={onClose}
@@ -38,14 +40,14 @@ function CertificateModal({ open, onClose, cert }) {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <div>
             <div className="text-zinc-500">Issuer</div>
             <div>{cert.issuer || "—"}</div>
           </div>
           <div>
             <div className="text-zinc-500">Certificate No.</div>
-            <div>{cert.certificateNo || "—"}</div>
+            <div className="break-all">{cert.certificateNo || "—"}</div>
           </div>
           <div>
             <div className="text-zinc-500">Issue Date</div>
@@ -65,10 +67,10 @@ function CertificateModal({ open, onClose, cert }) {
           </div>
         </div>
 
-        <div className="flex gap-3 mt-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
           {doc?.url && (
             <a
-              className="px-3 py-2 rounded-lg border hover:bg-gray-50"
+              className="px-3 py-2 rounded-lg border hover:bg-gray-50 text-center"
               href={doc.url}
               target="_blank"
               rel="noreferrer"
@@ -78,7 +80,7 @@ function CertificateModal({ open, onClose, cert }) {
           )}
           {inv?.url && (
             <a
-              className="px-3 py-2 rounded-lg border hover:bg-gray-50"
+              className="px-3 py-2 rounded-lg border hover:bg-gray-50 text-center"
               href={inv.url}
               target="_blank"
               rel="noreferrer"
@@ -229,8 +231,8 @@ export default function Equipment() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Equipment Rental Hub</h1>
-          <p className="text-gray-600">Access modern farming equipment when you need it</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Equipment Rental Hub</h1>
+          <p className="text-gray-600 text-sm sm:text-base">Access modern farming equipment when you need it</p>
         </div>
 
         {/* Location Filter */}
@@ -247,10 +249,10 @@ export default function Equipment() {
                   placeholder="Enter city (e.g., Ludhiana, Bengaluru)"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col xs:flex-row gap-2 w-full md:w-auto">
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white min-h-[44px]"
                 >
                   <Search className="h-4 w-4" />
                   Search
@@ -259,7 +261,7 @@ export default function Equipment() {
                   <button
                     type="button"
                     onClick={clearCity}
-                    className="px-5 py-3 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700"
+                    className="px-5 py-3 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 min-h-[44px]"
                   >
                     Clear
                   </button>
@@ -330,18 +332,19 @@ export default function Equipment() {
                 key={item.id}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
               >
-                <div className="relative">
+                {/* Image: taller on phones for better feel; unchanged on md+ */}
+                <div className="relative w-full h-40 sm:h-48">
                   <img
                     src={imgSrc}
                     alt={item.title || "Farm equipment"}
-                    className="w-full h-48 object-cover bg-gray-100"
+                    className="absolute inset-0 w-full h-full object-cover bg-gray-100"
                     onError={(e) => {
                       e.currentTarget.onerror = null;
                       e.currentTarget.src = EQUIPMENT_PLACEHOLDER;
                     }}
                   />
                   <div
-                    className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
+                    className={`absolute top-3 right-3 sm:top-4 sm:right-4 px-2.5 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
                       item.available ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                     }`}
                   >
@@ -349,15 +352,15 @@ export default function Equipment() {
                   </div>
                 </div>
 
-                <div className="p-6">
+                <div className="p-5 sm:p-6">
                   <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    <div className="min-w-0">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 truncate">
                         {item.title}
                       </h3>
                       <p className="text-sm text-gray-600">by {ownerName}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       {certStatus && <CertBadge status={certStatus} />}
                       <div className="flex items-center gap-1">
                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -369,8 +372,8 @@ export default function Equipment() {
                   </div>
 
                   <div className="flex items-center text-sm text-gray-600 mb-4">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    {location}
+                    <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                    <span className="truncate">{location}</span>
                   </div>
 
                   {!!item.features?.length && (
@@ -414,7 +417,7 @@ export default function Equipment() {
                   <div className="flex gap-3">
                     <button
                       onClick={() => handleBookNow(item)}
-                      className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+                      className={`w-full py-3 px-4 rounded-lg font-medium transition-colors min-h-[44px] ${
                         item.available
                           ? "bg-green-600 hover:bg-green-700 text-white"
                           : "bg-gray-200 text-gray-500 cursor-not-allowed"
@@ -430,7 +433,7 @@ export default function Equipment() {
           })}
         </div>
 
-        {/* Pagination */}
+        {/* Pagination (placeholder for future load-more) */}
         {!loading && hasMore && (
           <div className="flex justify-center mt-8"></div>
         )}

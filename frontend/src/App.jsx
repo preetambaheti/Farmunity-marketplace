@@ -8,7 +8,7 @@ import Knowledge from "./components/Knowledge";
 import Dashboard from "./components/Dashboard";
 import Footer from "./components/Footer";
 import Auth from "./components/Auth";
-import ChatBox from "./components/ChatBox";
+import ChatBox from "./components/ChatBox"; // ✅ fix casing to match file/component
 import { getAuth, clearAuth } from "./services/api";
 import {
   Routes,
@@ -64,12 +64,15 @@ export default function App() {
   const isAuthed = !!user;
 
   const [currentPage, setCurrentPage] = useState("home");
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // ✅ mobile menu state
   const navigate = useNavigate();
   const location = useLocation();
 
   // Keep header highlight in sync with path
   useEffect(() => {
     setCurrentPage(pathToPage[location.pathname] || "home");
+    // ✅ close mobile menu on route change (prevents overlay lingering on phones)
+    setIsMenuOpen(false);
   }, [location.pathname]);
 
   function onNavigate(page) {
@@ -85,6 +88,7 @@ export default function App() {
     }
     const path = pageToPath[page] || "/";
     navigate(path);
+    setIsMenuOpen(false); // ✅ also close when navigating via header buttons
   }
 
   function onAuthSuccess(u) {
@@ -100,13 +104,17 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }} // ✅ mobile safe area
+    >
       <ScrollToTop />
+
       <Header
         currentPage={currentPage}
         onNavigate={onNavigate}
-        onMenuToggle={() => {}}
-        isMenuOpen={false}
+        onMenuToggle={() => setIsMenuOpen((s) => !s)} // ✅ wire up burger
+        isMenuOpen={isMenuOpen}
         isAuthed={isAuthed}
         onLogout={onLogout}
         user={user}
@@ -162,7 +170,7 @@ export default function App() {
             path="/chat/:conversationId"
             element={
               <RequireAuth authed={isAuthed}>
-                <Chatbox />
+                <ChatBox /> {/* ✅ corrected component */}
               </RequireAuth>
             }
           />

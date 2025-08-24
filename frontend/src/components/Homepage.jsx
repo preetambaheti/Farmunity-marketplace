@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  ArrowRight,
-  Truck,
-  BookOpen,
-  TrendingUp,
-} from "lucide-react";
+import { ArrowRight, Truck, BookOpen, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Homepage({ onNavigate }) {
@@ -29,7 +24,7 @@ export default function Homepage({ onNavigate }) {
   ];
   const [slide, setSlide] = useState(0);
 
-  // preload
+  // Preload images
   useEffect(() => {
     heroImages.forEach((src) => {
       const img = new Image();
@@ -37,9 +32,12 @@ export default function Homepage({ onNavigate }) {
     });
   }, [heroImages]);
 
-  // auto advance
+  // Auto-advance (kept same speed; respects reduced motion)
   useEffect(() => {
     if (!heroImages.length) return;
+    const prefersReduced =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (prefersReduced) return;
     const t = setInterval(
       () => setSlide((i) => (i + 1) % heroImages.length),
       5000
@@ -50,6 +48,7 @@ export default function Homepage({ onNavigate }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       {/* ===== Hero Section (slider) ===== */}
+      {/* Heights are EXACTLY your original desktop settings */}
       <div className="relative h-[520px] sm:h-[560px] lg:h-[620px] overflow-hidden text-white">
         {/* Slides */}
         {heroImages.map((src, i) => (
@@ -64,11 +63,12 @@ export default function Homepage({ onNavigate }) {
           />
         ))}
 
-        {/* Gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/20" />
+        {/* Subtle, uniform overlay (no transparent-navbar gradient) */}
+        <div className="absolute inset-0 bg-black/30 md:bg-black/20 lg:bg-black/10 pointer-events-none" />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 h-full flex items-center">
           <div className="text-center w-full">
+            {/* Desktop typography unchanged */}
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Empowering Farmers with Fair Prices,
               <br className="hidden md:block" />
@@ -80,7 +80,7 @@ export default function Homepage({ onNavigate }) {
               expert guidance.
             </p>
 
-            {/* CTA Buttons */}
+            {/* CTA Buttons (your original mobile behavior kept: full width on xs, inline on sm+) */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button
                 onClick={() => go("/marketplace", "marketplace")}
@@ -112,7 +112,7 @@ export default function Homepage({ onNavigate }) {
           </div>
         </div>
 
-        {/* Dots */}
+        {/* Dots (unchanged) */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2">
           {heroImages.map((_, i) => (
             <button

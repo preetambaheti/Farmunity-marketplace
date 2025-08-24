@@ -199,8 +199,8 @@ export default function Marketplace({ onUnauthorized }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Crop Marketplace</h1>
-          <p className="text-gray-600">Connect directly with buyers and sellers for fair trade</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Crop Marketplace</h1>
+          <p className="text-gray-600 text-sm sm:text-base">Connect directly with buyers and sellers for fair trade</p>
 
           {(err || priceErr) && (
             <div className="mt-3 inline-block text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
@@ -211,16 +211,17 @@ export default function Marketplace({ onUnauthorized }) {
 
         {/* Real-time Price Dashboard */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h2 className="text-xl font-semibold text-gray-900">Today's Market Prices</h2>
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            {/* Controls: stack on mobile, unchanged on desktop */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Today's Market Prices</h2>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col xs:flex-row sm:flex-row gap-3 sm:gap-3 items-stretch sm:items-center">
                 {/* State dropdown */}
-                <label className="flex items-center gap-2">
+                <label className="flex items-center justify-between sm:justify-start gap-2">
                   <span className="text-sm text-gray-600">State</span>
                   <select
-                    className="border rounded-md px-3 py-2 text-sm focus:outline-none"
+                    className="border rounded-md px-3 py-2 text-sm focus:outline-none w-40 sm:w-44"
                     value={selectedState}
                     onChange={(e) => setSelectedState(e.target.value)}
                   >
@@ -233,7 +234,7 @@ export default function Marketplace({ onUnauthorized }) {
                 </label>
 
                 {/* Wholesale / Retail toggle */}
-                <div className="flex bg-gray-100 rounded-lg p-1">
+                <div className="flex bg-gray-100 rounded-lg p-1 self-start">
                   <button
                     onClick={() => setPriceView("wholesale")}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -260,13 +261,13 @@ export default function Marketplace({ onUnauthorized }) {
           </div>
 
           {/* Prices grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 p-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 p-4 sm:p-6">
             {CROPS.map((crop) => {
               const row = priceByCrop[crop] || {};
               return (
                 <div key={crop} className="text-center">
-                  <div className="text-sm text-gray-600 mb-1">{crop}</div>
-                  <div className="text-lg font-bold text-gray-900 mb-1">
+                  <div className="text-xs sm:text-sm text-gray-600 mb-1">{crop}</div>
+                  <div className="text-base sm:text-lg font-bold text-gray-900 mb-1">
                     {row.price_per_qt != null ? `₹${row.price_per_qt}/qt` : "—"}
                   </div>
                   <Change pct={row.change_pct} />
@@ -279,7 +280,7 @@ export default function Marketplace({ onUnauthorized }) {
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
           <div className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <div className="flex items-center gap-2">
                 <Filter className="h-5 w-5 text-gray-400" />
                 <span className="text-sm font-medium text-gray-700">Filters:</span>
@@ -313,16 +314,24 @@ export default function Marketplace({ onUnauthorized }) {
                 key={listing.id}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
               >
-                <div className="aspect-w-16 aspect-h-9">
-                  <img src={listing.image} alt={listing.crop} className="w-full h-48 object-cover" />
+                {/* Image: better ratio on mobile, same visual on desktop */}
+                <div className="relative w-full h-40 sm:h-48">
+                  <img
+                    src={listing.image}
+                    alt={listing.crop}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
                 </div>
-                <div className="p-6">
+
+                <div className="p-5 sm:p-6">
                   <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">{listing.crop}</h3>
+                    <div className="min-w-0">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 truncate">
+                        {listing.crop}
+                      </h3>
                       <p className="text-sm text-gray-600">by {listing.farmer}</p>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 flex-shrink-0">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       <span className="text-sm font-medium text-gray-700">{listing.rating}</span>
                     </div>
@@ -340,12 +349,12 @@ export default function Marketplace({ onUnauthorized }) {
                   </div>
 
                   <div className="flex items-center text-sm text-gray-600 mb-4">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    {listing.location}
+                    <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                    <span className="truncate">{listing.location}</span>
                   </div>
 
-                  <div className="flex justify-between items-center">
-                    <div className="text-2xl font-bold text-green-600">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="text-xl sm:text-2xl font-bold text-green-600">
                       ₹{Number(listing.price).toLocaleString()}/qt
                     </div>
                     <button
@@ -357,7 +366,7 @@ export default function Marketplace({ onUnauthorized }) {
                         setChatListing(listing);
                         setChatOpen(true);
                       }}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors min-h-[44px] w-full sm:w-auto"
                     >
                       <MessageCircle className="h-4 w-4" />
                       Contact Seller

@@ -1,18 +1,22 @@
-import React from 'react';
+import React from "react";
 import { Link } from "react-router-dom";
-import { Facebook, Twitter, Instagram, Youtube, Globe } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
 import FarmunityMark from "../assets/farmunity-mark.svg";
 
 export default function Footer({ onNavigate }) {
   return (
     <footer className="bg-green-800 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          
           {/* Brand */}
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center mb-4">
-              <a href="/" className="flex items-center group" aria-label="Farmunity – Home">
+              <Link
+                to="/"
+                onClick={() => onNavigate?.("home")}
+                className="flex items-center group"
+                aria-label="Farmunity – Home"
+              >
                 <img
                   src={FarmunityMark}
                   alt="Farmunity"
@@ -23,26 +27,55 @@ export default function Footer({ onNavigate }) {
                 <span className="ml-2 text-xl font-bold text-white group-hover:opacity-90">
                   Farmunity
                 </span>
-              </a>
+              </Link>
             </div>
 
-            <p className="text-green-100 mb-4">
-              Empowering farmers with fair prices, equipment access, and knowledge for a sustainable future.
+            <p className="text-green-100 mb-4 max-w-sm">
+              Empowering farmers with fair prices, equipment access, and
+              knowledge for a sustainable future.
             </p>
 
-            <div className="flex space-x-4">
-              <button className="text-green-200 hover:text-white transition-colors" aria-label="Facebook">
-                <Facebook className="h-5 w-5" />
-              </button>
-              <button className="text-green-200 hover:text-white transition-colors" aria-label="Twitter">
-                <Twitter className="h-5 w-5" />
-              </button>
-              <button className="text-green-200 hover:text-white transition-colors" aria-label="Instagram">
-                <Instagram className="h-5 w-5" />
-              </button>
-              <button className="text-green-200 hover:text-white transition-colors" aria-label="YouTube">
-                <Youtube className="h-5 w-5" />
-              </button>
+            <div className="flex flex-wrap gap-3 sm:gap-4">
+              <a
+                href="https://www.facebook.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                aria-label="Facebook"
+                title="Facebook"
+              >
+                <Facebook className="h-5 w-5 text-green-50" />
+              </a>
+              <a
+                href="https://twitter.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                aria-label="Twitter"
+                title="Twitter"
+              >
+                <Twitter className="h-5 w-5 text-green-50" />
+              </a>
+              <a
+                href="https://www.instagram.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                aria-label="Instagram"
+                title="Instagram"
+              >
+                <Instagram className="h-5 w-5 text-green-50" />
+              </a>
+              <a
+                href="https://www.youtube.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                aria-label="YouTube"
+                title="YouTube"
+              >
+                <Youtube className="h-5 w-5 text-green-50" />
+              </a>
             </div>
           </div>
 
@@ -53,6 +86,7 @@ export default function Footer({ onNavigate }) {
               <li>
                 <Link
                   to="/"
+                  onClick={() => onNavigate?.("home")}
                   className="text-green-200 hover:text-white transition-colors"
                 >
                   Home
@@ -61,6 +95,7 @@ export default function Footer({ onNavigate }) {
               <li>
                 <Link
                   to="/marketplace"
+                  onClick={() => onNavigate?.("marketplace")}
                   className="text-green-200 hover:text-white transition-colors"
                 >
                   Marketplace
@@ -69,6 +104,7 @@ export default function Footer({ onNavigate }) {
               <li>
                 <Link
                   to="/equipment"
+                  onClick={() => onNavigate?.("equipment")}
                   className="text-green-200 hover:text-white transition-colors"
                 >
                   Equipment Rental
@@ -77,6 +113,7 @@ export default function Footer({ onNavigate }) {
               <li>
                 <Link
                   to="/knowledge"
+                  onClick={() => onNavigate?.("knowledge")}
                   className="text-green-200 hover:text-white transition-colors"
                 >
                   Knowledge Hub
@@ -85,6 +122,7 @@ export default function Footer({ onNavigate }) {
               <li>
                 <Link
                   to="/dashboard"
+                  onClick={() => onNavigate?.("dashboard")}
                   className="text-green-200 hover:text-white transition-colors"
                 >
                   Dashboard
@@ -93,66 +131,85 @@ export default function Footer({ onNavigate }) {
             </ul>
           </div>
 
-
           {/* Support */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Support</h3>
             <ul className="space-y-2">
               <li>
-                <button className="text-green-200 hover:text-white transition-colors">
+                <Link to="/help" className="text-green-200 hover:text-white transition-colors">
                   Help Center
-                </button>
+                </Link>
               </li>
               <li>
-                <button className="text-green-200 hover:text-white transition-colors">
+                <Link to="/contact" className="text-green-200 hover:text-white transition-colors">
                   Contact Us
-                </button>
+                </Link>
               </li>
               <li>
-                <button className="text-green-200 hover:text-white transition-colors">
+                <Link
+                  to="/guidelines"
+                  className="text-green-200 hover:text-white transition-colors"
+                >
                   Community Guidelines
-                </button>
+                </Link>
               </li>
               <li>
-                <button className="text-green-200 hover:text-white transition-colors">
-                  Safety & Security
-                </button>
+                <Link
+                  to="/safety"
+                  className="text-green-200 hover:text-white transition-colors"
+                >
+                  Safety &amp; Security
+                </Link>
               </li>
               <li>
-                <button className="text-green-200 hover:text-white transition-colors">
+                <Link to="/report" className="text-green-200 hover:text-white transition-colors">
                   Report an Issue
-                </button>
+                </Link>
               </li>
             </ul>
           </div>
 
-          {/* Language & Contact */}
+          {/* Contact */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
-            <div className="mb-4">
-            </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <p className="text-green-200">
                 <span className="block font-medium">Helpline</span>
-                1800-123-4567 (Toll Free)
+                <a
+                  href="tel:18001234567"
+                  className="hover:text-white transition-colors inline-block"
+                >
+                  1800-123-4567 (Toll Free)
+                </a>
               </p>
               <p className="text-green-200">
                 <span className="block font-medium">Email</span>
-                support@farmunity.com
+                <a
+                  href="mailto:support@farmunity.com"
+                  className="hover:text-white transition-colors inline-block break-all"
+                >
+                  support@farmunity.com
+                </a>
               </p>
             </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-green-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+        <div className="border-t border-green-700 mt-8 pt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="text-green-200 text-sm">
             © 2025 Farmunity. All rights reserved.
           </div>
-          <div className="flex space-x-6 text-sm text-green-200 mt-4 md:mt-0">
-            <button className="hover:text-white transition-colors">Privacy Policy</button>
-            <button className="hover:text-white transition-colors">Terms of Service</button>
-            <button className="hover:text-white transition-colors">Cookie Policy</button>
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm text-green-200">
+            <Link to="/privacy" className="hover:text-white transition-colors">
+              Privacy Policy
+            </Link>
+            <Link to="/terms" className="hover:text-white transition-colors">
+              Terms of Service
+            </Link>
+            <Link to="/cookies" className="hover:text-white transition-colors">
+              Cookie Policy
+            </Link>
           </div>
         </div>
       </div>

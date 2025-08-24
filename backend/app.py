@@ -1385,6 +1385,87 @@ def _format_location_from_owm(cur):
         "country": country
     }
 
+# --- NEW: Weather endpoints used by the frontend ---
+
+@app.get("/api/weather/now")
+def weather_now():
+    """
+    Public endpoint used by api.weatherNow({ lat, lon, q }).
+    Returns current weather and a compact 3-day outlook.
+    """
+    lat = request.args.get("lat")
+    lon = request.args.get("lon")
+    q = request.args.get("q")
+
+    try:
+        cur = _resolve_current(lat=lat, lon=lon, q=q)
+        fc = _resolve_forecast(lat=lat, lon=lon, q=q)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": f"Weather provider error: {e}"}), 502
+
+    loc = _format_location_from_owm(cur)
+    outlook = _aggregate_3days(fc)
+    return jsonify({
+        "location": loc,
+        "current": {
+            "temp": (cur.get("main") or {}).get("temp"),
+            "feels_like": (cur.get("main") or {}).get("feels_like"),
+            "humidity": (cur.get("main") or {}).get("humidity"),
+            "pressure": (cur.get("main") or {}).get("pressure"),
+            "wind_speed": (cur.get("wind") or {}).get("speed"),
+            "wind_deg": (cur.get("wind") or {}).get("deg"),
+            "weather": (cur.get("weather") or [{}])[0]
+        },
+        "outlook3d": outlook
+    })
+
+@app.get("/api/weather/advisory")
+@token_required
+def weather_advisory():
+    """
+    Auth-only endpoint used by api.weatherAdvisory({ lat, lon, q }).
+    Returns a simple farm-focused advisory for the next 3 days.
+    """
+    lat = request.args.get("lat")
+    lon = request.args.get("lon")
+    q = request.args.get("q")
+
+    try:
+        cur = _resolve_current(lat=lat, lon=lon, q=q)
+        fc = _resolve_forecast(lat=lat, lon=lon, q=q)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": f"Weather provider error: {e}"}), 502
+
+    loc = _format_location_from_owm(cur)
+    days = _aggregate_3days(fc)
+
+    # Very lightweight rule-based advice
+    tips = []
+    if any(d["rain_mm"] >= 5 for d in days):
+        tips.append("Rain likely — delay irrigation and keep harvested grain covered.")
+    if any(d["max"] is not None and d["max"] >= 35 for d in days):
+        tips.append("High heat — irrigate in the evening/morning; mulch to reduce evap loss.")
+    if any(d["min"] is not None and d["min"] <= 10 for d in days):
+        tips.append("Cool nights — consider row covers for nurseries/seedlings.")
+    if any((d["main"] or "").lower() in ["thunderstorm"] for d in days):
+        tips.append("Thunderstorms possible — secure shade nets and tall trellises.")
+    if not tips:
+        tips.append("No severe signals — proceed with routine field work.")
+
+    return jsonify({
+        "location": loc,
+        "today": {
+            "temp": (cur.get("main") or {}).get("temp"),
+            "weather": (cur.get("weather") or [{}])[0]
+        },
+        "outlook3d": days,
+        "advice": tips
+    })
+
 @app.get("/api/ai/sessions")
 @token_required
 def ai_list_sessions():

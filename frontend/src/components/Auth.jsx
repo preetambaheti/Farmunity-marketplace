@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { api, saveAuth } from "../services/api";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Auth({ onAuthSuccess, onNavigate }) {
   const [mode, setMode] = useState("login"); // 'login' | 'signup'
@@ -12,6 +13,7 @@ export default function Auth({ onAuthSuccess, onNavigate }) {
     password: "",
     role: "Farmer", // display label; we'll normalize to lowercase before sending
   });
+  const [showPw, setShowPw] = useState(false);
 
   const onChange = (e) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -23,6 +25,7 @@ export default function Auth({ onAuthSuccess, onNavigate }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (loading) return; // prevent double submits
     setError("");
     setLoading(true);
     try {
@@ -57,7 +60,7 @@ export default function Auth({ onAuthSuccess, onNavigate }) {
       if (role === "farmer") {
         onNavigate("dashboard");
       } else {
-        // Buyers (or any other role) -> marketplace (adjust if you prefer "/")
+        // Buyers (or any other role) -> marketplace
         onNavigate("marketplace");
       }
     } catch (err) {
@@ -68,18 +71,24 @@ export default function Auth({ onAuthSuccess, onNavigate }) {
   }
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center bg-white">
-      <div className="w-full max-w-md bg-white border border-green-100 rounded-2xl shadow-sm p-6">
+    <div
+      className="min-h-[70vh] flex items-center justify-center bg-white px-3 sm:px-0"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
+      <div className="w-full max-w-md bg-white border border-green-100 rounded-2xl shadow-sm p-6 sm:p-6">
+        {/* Brand mark */}
         <div className="flex justify-center mb-4">
           <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
             <span className="text-white font-bold">F</span>
           </div>
         </div>
 
+        {/* Title */}
         <h2 className="text-center text-2xl font-bold text-green-800">
           {mode === "login" ? "Login to Farmunity" : "Create your Farmunity account"}
         </h2>
 
+        {/* Mode Switch (stacked on mobile, unchanged on desktop) */}
         <div className="mt-4 flex gap-2 justify-center">
           <button
             type="button"
@@ -103,7 +112,8 @@ export default function Auth({ onAuthSuccess, onNavigate }) {
           </button>
         </div>
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+        {/* Form */}
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit} noValidate>
           {mode === "signup" && (
             <>
               <div>
@@ -112,9 +122,11 @@ export default function Auth({ onAuthSuccess, onNavigate }) {
                   name="name"
                   value={form.name}
                   onChange={onChange}
-                  className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-[16px]"
                   placeholder="e.g., Rohan Kumar"
                   required
+                  autoComplete="name"
+                  autoCapitalize="words"
                 />
               </div>
 
@@ -124,7 +136,8 @@ export default function Auth({ onAuthSuccess, onNavigate }) {
                   name="role"
                   value={form.role}
                   onChange={onChange}
-                  className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-[16px]"
+                  aria-label="Choose role"
                 >
                   <option>Farmer</option>
                   <option>Buyer</option>
@@ -140,29 +153,49 @@ export default function Auth({ onAuthSuccess, onNavigate }) {
               name="email"
               value={form.email}
               onChange={onChange}
-              className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-[16px]"
               placeholder="you@example.com"
               required
               autoComplete="email"
+              inputMode="email"
+              autoCapitalize="none"
             />
           </div>
 
           <div>
             <label className="block text-sm text-gray-700 mb-1">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={onChange}
-              className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="••••••••"
-              required
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-            />
+            <div className="relative">
+              <input
+                type={showPw ? "text" : "password"}
+                name="password"
+                value={form.password}
+                onChange={onChange}
+                className="w-full border rounded-md px-3 py-2 pr-11 focus:outline-none focus:ring-2 focus:ring-green-500 text-[16px]"
+                placeholder="••••••••"
+                required
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                enterKeyHint={mode === "login" ? "go" : "done"}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw((s) => !s)}
+                className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
+                aria-label={showPw ? "Hide password" : "Show password"}
+                tabIndex={0}
+              >
+                {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+            {/* Mobile helper: keep min 16px font-size to avoid iOS zoom */}
+            <p className="sr-only">Password field uses large font size to avoid zoom on mobile.</p>
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-md p-2">
+            <div
+              className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-md p-2"
+              role="alert"
+              aria-live="assertive"
+            >
               {error}
             </div>
           )}
@@ -174,6 +207,13 @@ export default function Auth({ onAuthSuccess, onNavigate }) {
           >
             {loading ? "Please wait..." : mode === "login" ? "Login" : "Create account"}
           </button>
+
+          {/* Subtext (kept subtle; helpful on phones) */}
+          <p className="text-[12px] text-gray-500 text-center">
+            By continuing, you agree to our{" "}
+            <span className="underline">Terms</span> and{" "}
+            <span className="underline">Privacy Policy</span>.
+          </p>
         </form>
       </div>
     </div>

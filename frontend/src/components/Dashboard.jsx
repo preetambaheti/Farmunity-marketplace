@@ -29,10 +29,10 @@ function CertificateModal({ open, onClose, cert }) {
   const doc = cert?.documents?.find((d) => d.type === "certificate");
   const inv = cert?.documents?.find((d) => d.type === "invoice");
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
-      <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-2xl p-6">
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 sm:p-0">
+      <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-2xl p-4 sm:p-6 max-h-[80vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold">Certification Details</h3>
+          <h3 className="text-base sm:text-lg font-semibold">Certification Details</h3>
           <button
             aria-label="Close"
             onClick={onClose}
@@ -42,14 +42,14 @@ function CertificateModal({ open, onClose, cert }) {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <div>
             <div className="text-zinc-500">Issuer</div>
             <div>{cert.issuer || "—"}</div>
           </div>
           <div>
             <div className="text-zinc-500">Certificate No.</div>
-            <div>{cert.certificateNo || "—"}</div>
+            <div className="break-all">{cert.certificateNo || "—"}</div>
           </div>
           <div>
             <div className="text-zinc-500">Issue Date</div>
@@ -69,10 +69,10 @@ function CertificateModal({ open, onClose, cert }) {
           </div>
         </div>
 
-        <div className="flex gap-3 mt-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
           {doc?.url && (
             <a
-              className="px-3 py-2 rounded-lg border hover:bg-gray-50"
+              className="px-3 py-2 rounded-lg border hover:bg-gray-50 text-center"
               href={doc.url}
               target="_blank"
               rel="noreferrer"
@@ -82,7 +82,7 @@ function CertificateModal({ open, onClose, cert }) {
           )}
           {inv?.url && (
             <a
-              className="px-3 py-2 rounded-lg border hover:bg-gray-50"
+              className="px-3 py-2 rounded-lg border hover:bg-gray-50 text-center"
               href={inv.url}
               target="_blank"
               rel="noreferrer"
@@ -150,10 +150,10 @@ function AdminCertsPanel() {
                   Preview details
                 </button>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col xs:flex-row gap-2">
                 {doc?.url && (
                   <a
-                    className="px-2 py-1 border rounded"
+                    className="px-2 py-1 border rounded text-center"
                     href={doc.url}
                     target="_blank"
                     rel="noreferrer"
@@ -163,13 +163,13 @@ function AdminCertsPanel() {
                 )}
                 <button
                   onClick={() => decide(it._id, true)}
-                  className="px-3 py-1 rounded bg-green-600 text-white"
+                  className="px-3 py-2 rounded bg-green-600 text-white min-h-[40px]"
                 >
                   Approve
                 </button>
                 <button
                   onClick={() => decide(it._id, false)}
-                  className="px-3 py-1 rounded bg-red-600 text-white"
+                  className="px-3 py-2 rounded bg-red-600 text-white min-h-[40px]"
                 >
                   Reject
                 </button>
@@ -310,7 +310,7 @@ function UploadCertForm({ eid, onDone }) {
       <button
         onClick={submit}
         disabled={loading || okMsg !== ""}
-        className={`px-3 py-2 rounded-lg text-white ${
+        className={`px-3 py-2 rounded-lg text-white min-h-[44px] ${
           okMsg ? "bg-green-600 opacity-80 cursor-default" : "bg-blue-600 hover:bg-blue-700"
         }`}
       >
@@ -500,28 +500,28 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <p className="text-gray-600 text-sm sm:text-base">
             Manage your crops, equipment, and track your farming business
           </p>
         </div>
 
         {/* Profile Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
-          <div className="p-6">
-            <div className="flex items-center gap-6">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-                <User className="h-10 w-10 text-green-600" />
+          <div className="p-5 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center">
+                <User className="h-8 w-8 sm:h-10 sm:w-10 text-green-600" />
               </div>
 
-              <div className="flex-1">
-                <h2 className="text-2xl font-semibold text-gray-900 mb-1">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 truncate">
                   {me?.name}
                 </h2>
-                <p className="text-gray-600 mb-2">
+                <p className="text-gray-600 mb-2 truncate">
                   {me?.location || "Add your location in Edit Profile"}
                 </p>
-                <div className="flex items-center gap-4 text-sm">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm">
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                     <span className="font-medium">
@@ -534,13 +534,13 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 sm:gap-3">
                 <NotificationBell />
                 <button
                   onClick={() =>
                     document.getElementById("open-edit-profile")?.click?.()
                   }
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors min-h-[40px]"
                 >
                   Edit Profile
                 </button>
@@ -552,14 +552,14 @@ export default function Dashboard() {
         {/* Active Crop Listings (farmer only) */}
         {isFarmer && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-gray-900">
+            <div className="p-5 sm:p-6 border-b border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                   Active Crop Listings
                 </h2>
                 <button
                   onClick={() => setShowNew(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 min-h-[40px]"
                 >
                   <Plus className="h-4 w-4" />
                   Add New Listing
@@ -571,25 +571,25 @@ export default function Dashboard() {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Crop
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Quantity
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Price/Qt
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Quality
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Inquiries
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[11px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -598,35 +598,35 @@ export default function Dashboard() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {loadingCrops ? (
                     <tr>
-                      <td className="px-6 py-6 text-gray-500" colSpan={7}>
+                      <td className="px-3 sm:px-6 py-6 text-gray-500" colSpan={7}>
                         Loading...
                       </td>
                     </tr>
                   ) : crops.length === 0 ? (
                     <tr>
-                      <td className="px-6 py-6 text-gray-500" colSpan={7}>
+                      <td className="px-3 sm:px-6 py-6 text-gray-500" colSpan={7}>
                         No listings yet. Click “Add New Listing”.
                       </td>
                     </tr>
                   ) : (
                     crops.map((listing) => (
                       <tr key={listing.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap font-medium text-gray-900">
                           {listing.crop}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-gray-600">
                           {listing.quantity}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-gray-900 font-medium">
                           ₹{Number(listing.price ?? 0).toLocaleString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-gray-600">
                           {listing.quality || "-"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-gray-600">
                           {listing.inquiries ?? 0}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                           <span
                             className={`px-2 py-1 text-xs rounded-full ${
                               listing.status === "Active"
@@ -637,7 +637,7 @@ export default function Dashboard() {
                             {listing.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                           <button
                             onClick={() => handleDeleteCrop(listing.id)}
                             className="text-red-600 hover:text-red-700"
@@ -658,13 +658,13 @@ export default function Dashboard() {
         {/* Equipment Activity (farmer view) */}
         {isFarmer && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">
+            <div className="p-5 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                 Equipment Activity
               </h2>
               <button
                 onClick={() => setShowEqNew(true)}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 min-h-[40px]"
                 title="Add item"
               >
                 <Plus className="h-4 w-4" />
@@ -672,7 +672,7 @@ export default function Dashboard() {
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-5 sm:p-6">
               {eqLoading ? (
                 <div className="text-gray-500">Loading...</div>
               ) : myEquip.length === 0 ? (
@@ -686,9 +686,9 @@ export default function Dashboard() {
                         key={it.id}
                         className="p-4 bg-gray-50 rounded-lg border flex flex-col gap-3"
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                           {/* Left: title + features */}
-                          <div className="min-w-0 pr-4">
+                          <div className="min-w-0 pr-0 sm:pr-4">
                             <h3 className="font-medium text-gray-900 truncate flex items-center gap-2">
                               {it.title}
                               <CertBadge status={certStatus} />
@@ -701,7 +701,7 @@ export default function Dashboard() {
                           </div>
 
                           {/* Right: price + status + actions */}
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-3 sm:gap-4">
                             <div className="text-right">
                               <div className="font-medium text-gray-900">
                                 {it.price?.day
@@ -752,14 +752,14 @@ export default function Dashboard() {
 
       {/* ===== New Crop Listing Modal ===== */}
       {showNew && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => setShowNew(false)}
           />
-          <div className="relative bg-white w-full max-w-lg rounded-2xl shadow-xl p-6">
+          <div className="relative bg-white w-full max-w-lg rounded-2xl shadow-xl p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold">Add New Listing</h3>
+              <h3 className="text-lg sm:text-xl font-semibold">Add New Listing</h3>
               <button
                 onClick={() => setShowNew(false)}
                 className="p-2 rounded hover:bg-gray-100"
@@ -877,14 +877,14 @@ export default function Dashboard() {
 
       {/* ===== Add Equipment Modal ===== */}
       {showEqNew && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => setShowEqNew(false)}
           />
-          <div className="relative bg-white w-full max-w-lg rounded-2xl shadow-xl p-6">
+          <div className="relative bg-white w-full max-w-lg rounded-2xl shadow-xl p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold">Add Equipment</h3>
+              <h3 className="text-lg sm:text-xl font-semibold">Add Equipment</h3>
               <button
                 onClick={() => setShowEqNew(false)}
                 className="p-2 rounded hover:bg-gray-100"
