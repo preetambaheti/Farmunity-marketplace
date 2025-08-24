@@ -15,6 +15,17 @@ export function authHeaders() {
   }
 }
 
+// ---- Fetch with timeout ----
+async function fetchWithTimeout(resource, options = {}, timeoutMs = 10000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(resource, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 // ---- Low-level request wrapper ----
 // Auto-sets JSON Content-Type unless the body is FormData
 async function req(path, options = {}) {
@@ -23,9 +34,10 @@ async function req(path, options = {}) {
   const isFormData = options?.body instanceof FormData;
   const baseHeaders = isFormData ? {} : { "Content-Type": "application/json" };
   const headers = { ...baseHeaders, ...(options.headers || {}) };
+  const timeoutMs = options.timeoutMs || 10000;
 
   try {
-    resp = await fetch(`${API_URL}${path}`, { ...options, headers });
+    resp = await fetchWithTimeout(`${API_URL}${path}`, { ...options, headers }, timeoutMs);
   } catch (networkErr) {
     throw new Error(`Network error: ${networkErr.message}`);
   }
@@ -80,6 +92,19 @@ export function setAuthUser(userUpdates = {}) {
 
 // ---- API surface ----
 export const api = {
+  // ===== Infra warmup =====
+  /** Ping tiny endpoints at boot to avoid first-request cold start lag. */
+  prewarm: async () => {
+    try {
+      await Promise.race([
+        req("/api/health", { timeoutMs: 5000 }),
+        new Promise((_, r) => setTimeout(() => r(new Error("warmup timeout")), 5000)),
+      ]);
+      // Optionally also touch DB health (non-blocking)
+      req("/api/health/db", { timeoutMs: 5000 }).catch(() => {});
+    } catch { /* ignore */ }
+  },
+
   // ===== Auth =====
   signup: (payload) =>
     req("/api/auth/signup", { method: "POST", body: JSON.stringify(payload) }),
@@ -139,12 +164,9 @@ export const api = {
 
   // Optional realtime via SSE (if backend enabled)
   openCropsStream(onMessage) {
-    const ev = new EventSource(`${API_URL}/api/crops/stream`);
+    const ev = new EventSource(`${API_URL}/api/crops/stream`.replace(`${API_URL}//`, `${API_URL}/`));
     ev.onmessage = (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        onMessage?.(data);
-      } catch {}
+      try { onMessage?.(JSON.parse(e.data)); } catch {}
     };
     ev.onerror = () => ev.close();
     return () => ev.close();
@@ -197,16 +219,11 @@ export const api = {
 
   // Optional: live updates via Server-Sent Events (Atlas/replica set only)
   openEquipmentStream(onMessage) {
-    const ev = new EventSource(`${API_URL}/api/equipment/stream`);
+    const ev = new EventSource(`${API_URL}/api/equipment/stream`.replace(`${API_URL}//`, `${API_URL}/`));
     ev.onmessage = (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        onMessage?.(data);
-      } catch {}
+      try { onMessage?.(JSON.parse(e.data)); } catch {}
     };
-    ev.onerror = () => {
-      ev.close();
-    };
+    ev.onerror = () => ev.close();
     return () => ev.close();
   },
 
@@ -273,13 +290,13 @@ export const api = {
     }),
 
   // ===== Forum / Community =====
-  forumList: (params = {}) => {
+  forumList: (params = {}, fetchOptions = {}) => {
     const sp = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== "") sp.append(k, v);
     });
     const qs = sp.toString() ? `?${sp.toString()}` : "";
-    return req(`/api/forum/discussions${qs}`);
+    return req(`/api/forum/discussions${qs}`, fetchOptions);
   },
 
   forumCreate: ({ title, text, category }) =>

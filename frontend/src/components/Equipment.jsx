@@ -1,9 +1,8 @@
+// frontend/src/components/Equipment.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { Calendar, Clock, MapPin, Star, Users, Filter, Search } from "lucide-react";
+import { MapPin, Star, Filter, Search } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "../services/api";
-import ChatBox from "./ChatBox";
-
 
 // ---------- Small inline components for Certification UI ----------
 function CertBadge({ status }) {
@@ -93,7 +92,21 @@ function CertificateModal({ open, onClose, cert }) {
     </div>
   );
 }
-// -------------------------------------------------------------------
+
+// ---------- Skeleton card for instant first paint ----------
+function CardSkeleton() {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-pulse">
+      <div className="h-40 sm:h-48 bg-gray-200" />
+      <div className="p-5 sm:p-6 space-y-3">
+        <div className="h-5 bg-gray-200 rounded w-2/3" />
+        <div className="h-4 bg-gray-200 rounded w-1/3" />
+        <div className="h-4 bg-gray-200 rounded w-1/2" />
+        <div className="h-10 bg-gray-200 rounded" />
+      </div>
+    </div>
+  );
+}
 
 export default function Equipment() {
   // ===== Router =====
@@ -102,13 +115,12 @@ export default function Equipment() {
   const params = new URLSearchParams(loc.search);
   const initialCity = params.get("city") || "";
 
-  // A reliable, royalty-free placeholder image
+  // Placeholder image
   const EQUIPMENT_PLACEHOLDER =
     "https://images.unsplash.com/photo-1594322436404-5f0390aa2f43?auto=format&fit=crop&w=1600&q=80";
 
   // ===== UI state =====
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedType, setSelectedType] = useState("rent");
   const [cityInput, setCityInput] = useState(initialCity);
   const [selectedCity, setSelectedCity] = useState(initialCity);
 
@@ -147,25 +159,27 @@ export default function Equipment() {
     [page, selectedCategory, selectedCity]
   );
 
-  // ===== Fetch data =====
+  // ===== Fetch data (fast & abortable) =====
   useEffect(() => {
-    let cancel = false;
+    const ac = new AbortController();
     setLoading(true);
     setErr("");
 
     api
       .getEquipment(filters)
       .then((res) => {
-        if (cancel) return;
+        if (ac.signal.aborted) return;
         setItems(res.items || []);
         setHasMore(res.hasMore);
       })
-      .catch((e) => !cancel && setErr(e.message || "Failed to load equipment"))
-      .finally(() => !cancel && setLoading(false));
+      .catch((e) => {
+        if (!ac.signal.aborted) setErr(e.message || "Failed to load equipment");
+      })
+      .finally(() => {
+        if (!ac.signal.aborted) setLoading(false);
+      });
 
-    return () => {
-      cancel = true;
-    };
+    return () => ac.abort();
   }, [filters]);
 
   // ===== Realtime refresh via SSE (no-op if not supported) =====
@@ -192,7 +206,7 @@ export default function Equipment() {
     const next = cityInput.trim();
     setSelectedCity(next);
     setPage(1);
-    // Keep URL in sync (optional)
+    // Keep URL in sync
     const qs = new URLSearchParams(loc.search);
     if (next) qs.set("city", next);
     else qs.delete("city");
@@ -208,7 +222,6 @@ export default function Equipment() {
     navigate({ pathname: "/equipment", search: qs.toString() ? `?${qs}` : "" }, { replace: true });
   }
 
-  // Book Now -> notify owner + open chat
   async function handleBookNow(item) {
     try {
       const res = await api.requestEquipment(item.id);
@@ -218,13 +231,17 @@ export default function Equipment() {
         return;
       }
       navigate(`/chat/${id}`);
-      // Ensure page scrolls to top when route changes
       requestAnimationFrame(() => window.scrollTo(0, 0));
     } catch (e) {
       alert(e.message || "Could not send booking request");
       console.error(e);
     }
   }
+
+  const skeletons = useMemo(
+    () => Array.from({ length: 6 }, (_, i) => <CardSkeleton key={i} />),
+    []
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -305,138 +322,135 @@ export default function Equipment() {
           </div>
         </div>
 
-        {/* Error / Loading */}
+        {/* Error */}
         {err && (
           <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {err}
           </div>
         )}
-        {loading && <div className="mb-6 text-sm text-gray-600">Loading equipment…</div>}
 
         {/* Equipment Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {items.map((item) => {
-            const imgSrc = item.images?.[0] || EQUIPMENT_PLACEHOLDER;
-            const priceDay = item.price?.day ?? 0;
-            const priceWeek = item.price?.week ?? 0;
-            const ownerName = item.owner?.name || "—";
-            const location =
-              item.location?.city && item.location?.state
-                ? `${item.location.city}, ${item.location.state}`
-                : item.location?.city || item.location?.state || "—";
+          {loading
+            ? skeletons
+            : items.map((item) => {
+                const imgSrc = item.images?.[0] || EQUIPMENT_PLACEHOLDER;
+                const priceDay = item.price?.day ?? 0;
+                const priceWeek = item.price?.week ?? 0;
+                const ownerName = item.owner?.name || "—";
+                const location =
+                  item.location?.city && item.location?.state
+                    ? `${item.location.city}, ${item.location.state}`
+                    : item.location?.city || item.location?.state || "—";
 
-            const certStatus = item.certification?.status; // "certified" | "pending" | "rejected" | "expired" | undefined
+                const certStatus = item.certification?.status;
 
-            return (
-              <div
-                key={item.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
-              >
-                {/* Image: taller on phones for better feel; unchanged on md+ */}
-                <div className="relative w-full h-40 sm:h-48">
-                  <img
-                    src={imgSrc}
-                    alt={item.title || "Farm equipment"}
-                    className="absolute inset-0 w-full h-full object-cover bg-gray-100"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = EQUIPMENT_PLACEHOLDER;
-                    }}
-                  />
+                return (
                   <div
-                    className={`absolute top-3 right-3 sm:top-4 sm:right-4 px-2.5 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
-                      item.available ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                    }`}
+                    key={item.id}
+                    className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
                   >
-                    {item.available ? "Available" : "Booked"}
-                  </div>
-                </div>
-
-                <div className="p-5 sm:p-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="min-w-0">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 truncate">
-                        {item.title}
-                      </h3>
-                      <p className="text-sm text-gray-600">by {ownerName}</p>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {certStatus && <CertBadge status={certStatus} />}
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium text-gray-700">
-                          {item.rating ?? "—"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center text-sm text-gray-600 mb-4">
-                    <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                    <span className="truncate">{location}</span>
-                  </div>
-
-                  {!!item.features?.length && (
-                    <div className="mb-4">
-                      <div className="text-sm text-gray-600 mb-2">Features:</div>
-                      <div className="flex flex-wrap gap-2">
-                        {item.features.map((f, idx) => (
-                          <span
-                            key={idx}
-                            className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
-                          >
-                            {f}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between items-end mb-4">
-                    <div>
-                      <div className="text-lg font-bold text-green-600">
-                        ₹{Number(priceDay).toLocaleString()}/day
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        ₹{Number(priceWeek).toLocaleString()}/week
-                      </div>
-                    </div>
-
-                    {/* View Certificate only when there is a certification object */}
-                    {item.certification && (
-                      <button
-                        type="button"
-                        className="text-sm underline text-blue-600"
-                        onClick={() => setOpenCert(item.certification)}
+                    <div className="relative w-full h-40 sm:h-48">
+                      <img
+                        src={imgSrc}
+                        alt={item.title || "Farm equipment"}
+                        className="absolute inset-0 w-full h-full object-cover bg-gray-100"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = EQUIPMENT_PLACEHOLDER;
+                        }}
+                      />
+                      <div
+                        className={`absolute top-3 right-3 sm:top-4 sm:right-4 px-2.5 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
+                          item.available ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                        }`}
                       >
-                        View Certificate
-                      </button>
-                    )}
-                  </div>
+                        {item.available ? "Available" : "Booked"}
+                      </div>
+                    </div>
 
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => handleBookNow(item)}
-                      className={`w-full py-3 px-4 rounded-lg font-medium transition-colors min-h-[44px] ${
-                        item.available
-                          ? "bg-green-600 hover:bg-green-700 text-white"
-                          : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                      }`}
-                      disabled={!item.available}
-                    >
-                      {item.available ? "Book Now" : "Unavailable"}
-                    </button>
+                    <div className="p-5 sm:p-6">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="min-w-0">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 truncate">
+                            {item.title}
+                          </h3>
+                          <p className="text-sm text-gray-600">by {ownerName}</p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {certStatus && <CertBadge status={certStatus} />}
+                          <div className="flex items-center gap-1">
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            <span className="text-sm font-medium text-gray-700">
+                              {item.rating ?? "—"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center text-sm text-gray-600 mb-4">
+                        <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                        <span className="truncate">{location}</span>
+                      </div>
+
+                      {!!item.features?.length && (
+                        <div className="mb-4">
+                          <div className="text-sm text-gray-600 mb-2">Features:</div>
+                          <div className="flex flex-wrap gap-2">
+                            {item.features.map((f, idx) => (
+                              <span
+                                key={idx}
+                                className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
+                              >
+                                {f}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-end mb-4">
+                        <div>
+                          <div className="text-lg font-bold text-green-600">
+                            ₹{Number(priceDay).toLocaleString()}/day
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            ₹{Number(priceWeek).toLocaleString()}/week
+                          </div>
+                        </div>
+
+                        {item.certification && (
+                          <button
+                            type="button"
+                            className="text-sm underline text-blue-600"
+                            onClick={() => setOpenCert(item.certification)}
+                          >
+                            View Certificate
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => handleBookNow(item)}
+                          className={`w-full py-3 px-4 rounded-lg font-medium transition-colors min-h-[44px] ${
+                            item.available
+                              ? "bg-green-600 hover:bg-green-700 text-white"
+                              : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                          }`}
+                          disabled={!item.available}
+                        >
+                          {item.available ? "Book Now" : "Unavailable"}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
         </div>
 
         {/* Pagination (placeholder for future load-more) */}
-        {!loading && hasMore && (
-          <div className="flex justify-center mt-8"></div>
-        )}
+        {!loading && hasMore && <div className="flex justify-center mt-8"></div>}
       </div>
 
       {/* Global certificate modal */}

@@ -8,8 +8,8 @@ import Knowledge from "./components/Knowledge";
 import Dashboard from "./components/Dashboard";
 import Footer from "./components/Footer";
 import Auth from "./components/Auth";
-import ChatBox from "./components/ChatBox"; // ✅ fix casing to match file/component
-import { getAuth, clearAuth } from "./services/api";
+import ChatBox from "./components/ChatBox";
+import { getAuth, clearAuth, api } from "./services/api";
 import {
   Routes,
   Route,
@@ -36,7 +36,6 @@ const pathToPage = {
   "/knowledge": "knowledge",
   "/dashboard": "dashboard",
   "/login": "login",
-  // '/chat/:id' is not shown in header; it will default to 'home'
 };
 
 function RequireAuth({ authed, children }) {
@@ -59,42 +58,47 @@ function ScrollToTop() {
 }
 
 export default function App() {
-  // Read from localStorage immediately so direct /dashboard loads don’t bounce
+  // read cached auth immediately to avoid flicker on protected routes
   const [user, setUser] = useState(() => getAuth()?.user || null);
   const isAuthed = !!user;
 
   const [currentPage, setCurrentPage] = useState("home");
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // ✅ mobile menu state
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Keep header highlight in sync with path
+  // Warm the API once on boot to reduce first-load latency (cold starts)
+  useEffect(() => {
+    api.prewarm?.();
+  }, []);
+
+  // keep header highlight in sync with path & close mobile menu on navigation
   useEffect(() => {
     setCurrentPage(pathToPage[location.pathname] || "home");
-    // ✅ close mobile menu on route change (prevents overlay lingering on phones)
     setIsMenuOpen(false);
   }, [location.pathname]);
 
   function onNavigate(page) {
-    // Block protected pages if not logged in
+    // gate protected pages
     if (PROTECTED.has(page) && !isAuthed) {
       navigate("/login");
       return;
     }
-    // Farmer-only dashboard
+    // farmer-only dashboard
     if (page === "dashboard" && user?.role !== "farmer") {
-      navigate("/"); // or show a toast/notice if you have one
+      navigate("/");
       return;
     }
     const path = pageToPath[page] || "/";
     navigate(path);
-    setIsMenuOpen(false); // ✅ also close when navigating via header buttons
+    setIsMenuOpen(false);
   }
 
   function onAuthSuccess(u) {
-    // `Auth` should already save token+user in localStorage
+    // token & user already saved in Auth; just update state and route once
     setUser(u);
-    navigate("/");
+    const role = String(u?.role || "").toLowerCase();
+    navigate(role === "farmer" ? "/dashboard" : "/marketplace", { replace: true });
   }
 
   function onLogout() {
@@ -106,14 +110,14 @@ export default function App() {
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }} // ✅ mobile safe area
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ScrollToTop />
 
       <Header
         currentPage={currentPage}
         onNavigate={onNavigate}
-        onMenuToggle={() => setIsMenuOpen((s) => !s)} // ✅ wire up burger
+        onMenuToggle={() => setIsMenuOpen((s) => !s)}
         isMenuOpen={isMenuOpen}
         isAuthed={isAuthed}
         onLogout={onLogout}
@@ -126,7 +130,13 @@ export default function App() {
           <Route path="/" element={<Homepage onNavigate={onNavigate} />} />
           <Route
             path="/login"
-            element={<Auth onAuthSuccess={onAuthSuccess} onNavigate={onNavigate} />}
+            element={
+              isAuthed ? (
+                <Navigate to="/" replace />
+              ) : (
+                <Auth onAuthSuccess={onAuthSuccess} />
+              )
+            }
           />
 
           {/* Protected (any logged-in user) */}
@@ -170,7 +180,7 @@ export default function App() {
             path="/chat/:conversationId"
             element={
               <RequireAuth authed={isAuthed}>
-                <ChatBox /> {/* ✅ corrected component */}
+                <ChatBox />
               </RequireAuth>
             }
           />

@@ -196,6 +196,49 @@ function WeatherTab() {
         MAIN KNOWLEDGE PAGE
    =========================== */
 
+// Small fading skeleton row used in forum loading state
+function ForumSkeleton() {
+  return (
+    <div className="animate-pulse space-y-3">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="bg-white border border-gray-200 rounded-lg p-4">
+          <div className="h-4 bg-gray-200 rounded w-2/3 mb-2" />
+          <div className="h-3 bg-gray-200 rounded w-1/3 mb-3" />
+          <div className="h-3 bg-gray-200 rounded w-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// simple session cache (per tab open) with TTL
+const FORUM_CACHE_KEY = "forum_cache_v1";
+const FORUM_TTL_MS = 2 * 60 * 1000; // 2 minutes
+
+function readForumCache(q = "") {
+  try {
+    const raw = sessionStorage.getItem(FORUM_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const hit = parsed[q];
+    if (!hit) return null;
+    if (Date.now() - hit.ts > FORUM_TTL_MS) return null;
+    return hit.items || null;
+  } catch {
+    return null;
+  }
+}
+function writeForumCache(q = "", items = []) {
+  try {
+    const raw = sessionStorage.getItem(FORUM_CACHE_KEY);
+    const blob = raw ? JSON.parse(raw) : {};
+    blob[q] = { ts: Date.now(), items };
+    sessionStorage.setItem(FORUM_CACHE_KEY, JSON.stringify(blob));
+  } catch {
+    /* ignore */
+  }
+}
+
 export default function Knowledge() {
   const [chatInput, setChatInput] = useState("");
   const [activeTab, setActiveTab] = useState("chatbot");
@@ -250,7 +293,8 @@ export default function Knowledge() {
         ...m,
         {
           role: "assistant",
-          content: "Sorry, I couldn't process that. " + (e?.message ? `(${e.message})` : "Please try again."),
+          content:
+            "Sorry, I couldn't process that. " + (e?.message ? `(${e.message})` : "Please try again."),
         },
       ]);
     } finally {
@@ -290,31 +334,64 @@ export default function Knowledge() {
   const [replyOpen, setReplyOpen] = useState({});
   const [replyText, setReplyText] = useState({});
 
-  const loadForum = async () => {
+  // Keep a controller to cancel stale fetches
+  const controllerRef = useRef(null);
+
+  const fetchForum = async (query = "") => {
+    // If we already have cached data for this query, show it immediately.
+    const cached = readForumCache(query);
+    if (cached) {
+      setPosts(cached);
+      setForumLoading(false);
+    } else {
+      setForumLoading(true);
+    }
+
     setForumError("");
-    setForumLoading(true);
+    // cancel any in-flight request
+    controllerRef.current?.abort();
+    const ctrl = new AbortController();
+    controllerRef.current = ctrl;
+
     try {
-      const res = await api.forumList(q ? { q } : {});
-      setPosts(res.items || []);
+      const res = await api.forumList(query ? { q: query } : {}, { signal: ctrl.signal });
+      const items = res.items || [];
+      setPosts(items);
+      writeForumCache(query, items);
     } catch (e) {
+      if (e.name === "AbortError") return; // ignore cancelled
       setForumError(e.message || "Failed to load discussions");
     } finally {
-      setForumLoading(false);
+      if (!ctrl.signal.aborted) setForumLoading(false);
     }
   };
 
+  // Load forum when the tab is shown
   useEffect(() => {
-    if (activeTab === "forum") loadForum();
+    if (activeTab === "forum") fetchForum(q);
+    return () => controllerRef.current?.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
+  // Debounced search
   useEffect(() => {
-    const t = setTimeout(() => {
-      if (activeTab === "forum") loadForum();
-    }, 300);
+    if (activeTab !== "forum") return;
+    const t = setTimeout(() => fetchForum(q), 300);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q]);
+  }, [q, activeTab]);
+
+  // Warmup/prefetch in the background right after mount (helps cold starts)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      // only prefetch default (empty query) if not already cached
+      if (!readForumCache("")) {
+        fetchForum("");
+      }
+    }, 150); // tiny delay so it doesn't compete with first paint
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // helper: time-ago (updates every 30s)
   function useTick(ms = 30000) {
@@ -361,7 +438,9 @@ export default function Knowledge() {
     try {
       await api.forumCreate({ title, text, category });
       setShowModal(false);
-      await loadForum();
+      // Invalidate & refresh cache quickly
+      writeForumCache("", []); // clear default cache
+      await fetchForum(q);
     } catch (e) {
       alert(e.message || "Failed to create discussion");
     }
@@ -384,6 +463,8 @@ export default function Knowledge() {
       );
       setReplyText((t) => ({ ...t, [postId]: "" }));
       setReplyOpen((s) => ({ ...s, [postId]: true }));
+      // refresh cache for current query
+      writeForumCache(q, posts);
     } catch (e) {
       alert(e.message || "Failed to reply");
     }
@@ -478,16 +559,10 @@ export default function Knowledge() {
                 </div>
 
                 {/* Chat Interface */}
-                <div
-                  ref={scrollerRef}
-                  className="bg-gray-50 rounded-lg p-4 h-[60vh] sm:h-96 overflow-y-auto mb-4"
-                >
+                <div ref={scrollerRef} className="bg-gray-50 rounded-lg p-4 h-[60vh] sm:h-96 overflow-y-auto mb-4">
                   <div className="space-y-4">
                     {messages.map((m, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex items-start gap-3 ${m.role === "user" ? "justify-end" : ""}`}
-                      >
+                      <div key={idx} className={`flex items-start gap-3 ${m.role === "user" ? "justify-end" : ""}`}>
                         {m.role !== "user" && (
                           <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
                             <MessageCircle className="h-4 w-4 text-white" />
@@ -586,99 +661,102 @@ export default function Knowledge() {
                 </div>
 
                 {/* Server status */}
-                {forumLoading && <div className="text-sm text-gray-500">Loading…</div>}
                 {forumError && <div className="text-sm text-red-600">{forumError}</div>}
 
                 {/* Forum Posts */}
                 <div className="space-y-4">
-                  {(!posts || posts.length === 0) && !forumLoading && (
-                    <div className="text-center text-gray-500 py-12">No discussions yet. Be the first to start one!</div>
-                  )}
-
-                  {posts.map((post) => (
-                    <div
-                      key={post.id}
-                      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="min-w-0">
-                          <h4 className="font-medium text-gray-900 hover:text-green-600 cursor-pointer break-words">
-                            {post.title}
-                          </h4>
-                          <div className="flex flex-wrap items-center text-sm text-gray-600 gap-2 mt-1">
-                            <span className="inline-flex items-center gap-1">
-                              <UserIcon className="h-3.5 w-3.5" />
-                              {post.author?.name || "Anonymous"}
-                            </span>
-                            <span>•</span>
-                            <span>{timeAgo(post.createdAt)}</span>
-                            {post.category && (
-                              <>
-                                <span>•</span>
-                                <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">
-                                  {post.category}
-                                </span>
-                              </>
-                            )}
+                  {forumLoading && posts.length === 0 ? (
+                    <ForumSkeleton />
+                  ) : (!posts || posts.length === 0) && !forumLoading ? (
+                    <div className="text-center text-gray-500 py-12">
+                      No discussions yet. Be the first to start one!
+                    </div>
+                  ) : (
+                    posts.map((post) => (
+                      <div
+                        key={post.id}
+                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="min-w-0">
+                            <h4 className="font-medium text-gray-900 hover:text-green-600 cursor-pointer break-words">
+                              {post.title}
+                            </h4>
+                            <div className="flex flex-wrap items-center text-sm text-gray-600 gap-2 mt-1">
+                              <span className="inline-flex items-center gap-1">
+                                <UserIcon className="h-3.5 w-3.5" />
+                                {post.author?.name || "Anonymous"}
+                              </span>
+                              <span>•</span>
+                              <span>{timeAgo(post.createdAt)}</span>
+                              {post.category && (
+                                <>
+                                  <span>•</span>
+                                  <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">
+                                    {post.category}
+                                  </span>
+                                </>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        <button
-                          onClick={() => toggleReply(post.id)}
-                          className="px-3 py-1.5 text-sm border rounded-lg text-gray-700 hover:bg-gray-50 inline-flex items-center gap-2"
-                          title="Reply"
-                        >
-                          <Reply className="h-4 w-4" />
-                          Reply
-                        </button>
-                      </div>
-
-                      <p className="text-gray-800 whitespace-pre-wrap break-words">{post.text}</p>
-
-                      {/* Reply box */}
-                      {replyOpen[post.id] && (
-                        <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-start gap-2">
-                          <textarea
-                            value={replyText[post.id] || ""}
-                            onChange={(e) =>
-                              setReplyText((t) => ({
-                                ...t,
-                                [post.id]: e.target.value,
-                              }))
-                            }
-                            placeholder="Write your reply..."
-                            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-h-[70px]"
-                          />
                           <button
-                            onClick={() => submitReply(post.id)}
-                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 min-h-[44px]"
+                            onClick={() => toggleReply(post.id)}
+                            className="px-3 py-1.5 text-sm border rounded-lg text-gray-700 hover:bg-gray-50 inline-flex items-center gap-2"
+                            title="Reply"
                           >
-                            <Send className="h-4 w-4" />
-                            Post
+                            <Reply className="h-4 w-4" />
+                            Reply
                           </button>
                         </div>
-                      )}
 
-                      {/* Replies */}
-                      {post.replies?.length > 0 && (
-                        <div className="mt-4 space-y-3">
-                          {post.replies.map((r) => (
-                            <div key={r.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                              <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                                <span className="inline-flex items-center gap-1">
-                                  <UserIcon className="h-3.5 w-3.5" />
-                                  {r.author?.name || "Anonymous"}
-                                </span>
-                                <span>•</span>
-                                <span>{timeAgo(r.createdAt)}</span>
+                        <p className="text-gray-800 whitespace-pre-wrap break-words">{post.text}</p>
+
+                        {/* Reply box */}
+                        {replyOpen[post.id] && (
+                          <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-start gap-2">
+                            <textarea
+                              value={replyText[post.id] || ""}
+                              onChange={(e) =>
+                                setReplyText((t) => ({
+                                  ...t,
+                                  [post.id]: e.target.value,
+                                }))
+                              }
+                              placeholder="Write your reply..."
+                              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 min-h-[70px]"
+                            />
+                            <button
+                              onClick={() => submitReply(post.id)}
+                              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 min-h-[44px]"
+                            >
+                              <Send className="h-4 w-4" />
+                              Post
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Replies */}
+                        {post.replies?.length > 0 && (
+                          <div className="mt-4 space-y-3">
+                            {post.replies.map((r) => (
+                              <div key={r.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                                <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                                  <span className="inline-flex items-center gap-1">
+                                    <UserIcon className="h-3.5 w-3.5" />
+                                    {r.author?.name || "Anonymous"}
+                                  </span>
+                                  <span>•</span>
+                                  <span>{timeAgo(r.createdAt)}</span>
+                                </div>
+                                <div className="text-gray-800 whitespace-pre-wrap break-words">{r.text}</div>
                               </div>
-                              <div className="text-gray-800 whitespace-pre-wrap break-words">{r.text}</div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -699,11 +777,7 @@ export default function Knowledge() {
                 </div>
                 <h3 className="font-semibold text-gray-900">Start Discussion</h3>
               </div>
-              <button
-                onClick={() => setShowModal(false)}
-                className="p-1 rounded hover:bg-gray-100"
-                aria-label="Close"
-              >
+              <button onClick={() => setShowModal(false)} className="p-1 rounded hover:bg-gray-100" aria-label="Close">
                 <X className="h-5 w-5 text-gray-500" />
               </button>
             </div>

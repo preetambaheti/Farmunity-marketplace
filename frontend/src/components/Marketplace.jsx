@@ -1,10 +1,36 @@
 // frontend/src/components/Marketplace.jsx
 import React, { useEffect, useState, useMemo } from "react";
-import { Filter, MapPin, Star, MessageCircle, TrendingUp, TrendingDown } from "lucide-react";
+import {
+  Filter,
+  MapPin,
+  Star,
+  MessageCircle,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-react";
 import { api } from "../services/api";
 import ChatBox from "./ChatBox";
 
 const CROPS = ["Wheat", "Rice", "Corn", "Tomato", "Onion", "Potato"];
+
+// Simple shimmer card shown while data streams in
+function CardSkeleton() {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-pulse">
+      <div className="h-40 sm:h-48 bg-gray-200" />
+      <div className="p-5 sm:p-6 space-y-3">
+        <div className="h-5 bg-gray-200 rounded w-2/3" />
+        <div className="h-4 bg-gray-200 rounded w-1/3" />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="h-4 bg-gray-200 rounded" />
+          <div className="h-4 bg-gray-200 rounded" />
+        </div>
+        <div className="h-4 bg-gray-200 rounded w-1/2" />
+        <div className="h-10 bg-gray-200 rounded" />
+      </div>
+    </div>
+  );
+}
 
 export default function Marketplace({ onUnauthorized }) {
   const [selectedFilter, setSelectedFilter] = useState("all");
@@ -28,43 +54,11 @@ export default function Marketplace({ onUnauthorized }) {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatListing, setChatListing] = useState(null);
 
-  // ---- Safe fallback listings (shown only if API fails) ----
-  const fallbackListings = [
-    {
-      id: "fb-1",
-      ownerId: "dummy-owner-1",
-      farmer: "Raj Kumar",
-      crop: "Organic Wheat",
-      quantity: "500 quintals",
-      price: 2200,
-      location: "Ludhiana, Punjab",
-      quality: "Grade A",
-      rating: 4.8,
-      image:
-        "https://images.pexels.com/photos/265216/pexels-photo-265216.jpeg?auto=compress&cs=tinysrgb&w=600",
-      category: "grains",
-    },
-    {
-      id: "fb-2",
-      ownerId: "dummy-owner-2",
-      farmer: "Mohan Singh",
-      crop: "Fresh Tomatoes",
-      quantity: "150 quintals",
-      price: 3400,
-      location: "Nashik, Maharashtra",
-      quality: "Grade A",
-      rating: 4.6,
-      image:
-        "https://images.pexels.com/photos/1327838/pexels-photo-1327838.jpeg?auto=compress&cs=tinysrgb&w=600",
-      category: "vegetables",
-    },
-  ];
-
   // ------------------------
-  // Fetch STATES once
+  // Fetch STATES once (with AbortController)
   // ------------------------
   useEffect(() => {
-    let mounted = true;
+    const ac = new AbortController();
     (async () => {
       try {
         const r = await api.getStates();
@@ -76,16 +70,17 @@ export default function Marketplace({ onUnauthorized }) {
                 "Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh",
                 "Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan",
                 "Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal",
-                "Jammu and Kashmir"
+                "Jammu and Kashmir",
               ];
-        if (!mounted) return;
-        setStates(list);
-        if (!list.includes(selectedState)) setSelectedState(list[0]);
+        if (!ac.signal.aborted) {
+          setStates(list);
+          if (!list.includes(selectedState)) setSelectedState(list[0]);
+        }
       } catch {
-        // fallback already handled above
+        /* ignore — fallback already handled above */
       }
     })();
-    return () => { mounted = false; };
+    return () => ac.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -93,31 +88,33 @@ export default function Marketplace({ onUnauthorized }) {
   // Fetch TODAY PRICES whenever state/type changes
   // ------------------------
   useEffect(() => {
-    let mounted = true;
+    const ac = new AbortController();
     setPriceLoading(true);
     setPriceErr("");
     api
       .getTodayPrices({ state: selectedState, type: priceView })
       .then((r) => {
-        if (!mounted) return;
-        setPrices(r?.items || []);
+        if (!ac.signal.aborted) setPrices(r?.items || []);
       })
       .catch((e) => {
-        if (!mounted) return;
-        setPriceErr(e.message || "Failed to load prices");
-        setPrices([]);
+        if (!ac.signal.aborted) {
+          setPriceErr(e.message || "Failed to load prices");
+          setPrices([]);
+        }
       })
-      .finally(() => mounted && setPriceLoading(false));
-    return () => { mounted = false; };
+      .finally(() => !ac.signal.aborted && setPriceLoading(false));
+    return () => ac.abort();
   }, [selectedState, priceView]);
 
   // ------------------------
-  // Fetch protected crop listings
+  // Fetch protected crop listings (fast: fire immediately, abort on unmount)
   // ------------------------
   useEffect(() => {
+    const ac = new AbortController();
     (async () => {
       try {
         const res = await api.getCrops(); // PROTECTED API CALL
+        if (ac.signal.aborted) return;
         const normalized = (res.items || []).map((x, idx) => ({
           id: x.id || x._id || String(idx),
           ownerId: x.ownerId || x.createdBy || null,
@@ -137,19 +134,23 @@ export default function Marketplace({ onUnauthorized }) {
               .toLowerCase()
               .match(/tomato|onion|potato|vegetable/)
               ? "vegetables"
-              : String(x.crop || "").toLowerCase().match(/rice|wheat|corn|grain/)
+              : String(x.crop || "")
+                  .toLowerCase()
+                  .match(/rice|wheat|corn|grain/)
               ? "grains"
               : "organic"),
         }));
         setItems(normalized);
       } catch (e) {
-        setErr(e.message);
-        if (onUnauthorized) onUnauthorized();
-        setItems(fallbackListings);
+        if (!ac.signal.aborted) {
+          setErr(e.message);
+          onUnauthorized?.();
+        }
       } finally {
-        setLoading(false);
+        if (!ac.signal.aborted) setLoading(false);
       }
     })();
+    return () => ac.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -174,33 +175,41 @@ export default function Marketplace({ onUnauthorized }) {
 
   // ---- Small component for % change badge ----
   const Change = ({ pct }) => {
-    if (pct === null || pct === undefined) return <span className="text-gray-400">—</span>;
+    if (pct === null || pct === undefined)
+      return <span className="text-gray-400">—</span>;
     const pos = Number(pct) >= 0;
     return (
-      <div className={`flex items-center justify-center text-xs ${pos ? "text-green-600" : "text-red-600"}`}>
-        {pos ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+      <div
+        className={`flex items-center justify-center text-xs ${
+          pos ? "text-green-600" : "text-red-600"
+        }`}
+      >
+        {pos ? (
+          <TrendingUp className="h-3 w-3 mr-1" />
+        ) : (
+          <TrendingDown className="h-3 w-3 mr-1" />
+        )}
         {Math.abs(Number(pct)).toFixed(1)}%
       </div>
     );
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <p className="text-gray-600">Loading…</p>
-        </div>
-      </div>
-    );
-  }
+  const skeletons = useMemo(
+    () => Array.from({ length: 6 }, (_, i) => <CardSkeleton key={i} />),
+    []
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Crop Marketplace</h1>
-          <p className="text-gray-600 text-sm sm:text-base">Connect directly with buyers and sellers for fair trade</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            Crop Marketplace
+          </h1>
+          <p className="text-gray-600 text-sm sm:text-base">
+            Connect directly with buyers and sellers for fair trade
+          </p>
 
           {(err || priceErr) && (
             <div className="mt-3 inline-block text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
@@ -212,9 +221,11 @@ export default function Marketplace({ onUnauthorized }) {
         {/* Real-time Price Dashboard */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
           <div className="p-4 sm:p-6 border-b border-gray-200">
-            {/* Controls: stack on mobile, unchanged on desktop */}
+            {/* Controls */}
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Today's Market Prices</h2>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                Today&apos;s Market Prices
+              </h2>
 
               <div className="flex flex-col xs:flex-row sm:flex-row gap-3 sm:gap-3 items-stretch sm:items-center">
                 {/* State dropdown */}
@@ -266,9 +277,15 @@ export default function Marketplace({ onUnauthorized }) {
               const row = priceByCrop[crop] || {};
               return (
                 <div key={crop} className="text-center">
-                  <div className="text-xs sm:text-sm text-gray-600 mb-1">{crop}</div>
+                  <div className="text-xs sm:text-sm text-gray-600 mb-1">
+                    {crop}
+                  </div>
                   <div className="text-base sm:text-lg font-bold text-gray-900 mb-1">
-                    {row.price_per_qt != null ? `₹${row.price_per_qt}/qt` : "—"}
+                    {priceLoading
+                      ? "—"
+                      : row.price_per_qt != null
+                      ? `₹${row.price_per_qt}/qt`
+                      : "—"}
                   </div>
                   <Change pct={row.change_pct} />
                 </div>
@@ -283,22 +300,26 @@ export default function Marketplace({ onUnauthorized }) {
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <div className="flex items-center gap-2">
                 <Filter className="h-5 w-5 text-gray-400" />
-                <span className="text-sm font-medium text-gray-700">Filters:</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Filters:
+                </span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {["all", "grains", "vegetables", "fruits", "organic"].map((filter) => (
-                  <button
-                    key={filter}
-                    onClick={() => setSelectedFilter(filter)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                      selectedFilter === filter
-                        ? "bg-green-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                  </button>
-                ))}
+                {["all", "grains", "vegetables", "fruits", "organic"].map(
+                  (filter) => (
+                    <button
+                      key={filter}
+                      onClick={() => setSelectedFilter(filter)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                        selectedFilter === filter
+                          ? "bg-green-600 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                    </button>
+                  )
+                )}
               </div>
             </div>
           </div>
@@ -306,81 +327,98 @@ export default function Marketplace({ onUnauthorized }) {
 
         {/* Crop Listings */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredListings.length === 0 ? (
-            <div className="col-span-full text-gray-600">No listings found.</div>
-          ) : (
-            filteredListings.map((listing) => (
-              <div
-                key={listing.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
-              >
-                {/* Image: better ratio on mobile, same visual on desktop */}
-                <div className="relative w-full h-40 sm:h-48">
-                  <img
-                    src={listing.image}
-                    alt={listing.crop}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                </div>
-
-                <div className="p-5 sm:p-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="min-w-0">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 truncate">
-                        {listing.crop}
-                      </h3>
-                      <p className="text-sm text-gray-600">by {listing.farmer}</p>
-                    </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-medium text-gray-700">{listing.rating}</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">Quantity:</span>
-                      <div className="font-medium text-gray-900">{listing.quantity}</div>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Quality:</span>
-                      <div className="font-medium text-gray-900">{listing.quality}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center text-sm text-gray-600 mb-4">
-                    <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                    <span className="truncate">{listing.location}</span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="text-xl sm:text-2xl font-bold text-green-600">
-                      ₹{Number(listing.price).toLocaleString()}/qt
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (!listing.ownerId) {
-                          alert("Seller ID missing for this listing. Please re-seed crops with owner mapping.");
-                          return;
-                        }
-                        setChatListing(listing);
-                        setChatOpen(true);
-                      }}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors min-h-[44px] w-full sm:w-auto"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      Contact Seller
-                    </button>
-                  </div>
-                </div>
+          {loading
+            ? skeletons
+            : filteredListings.length === 0
+            ? (
+              <div className="col-span-full text-gray-600">
+                No listings found.
               </div>
-            ))
-          )}
+            )
+            : filteredListings.map((listing) => (
+                <div
+                  key={listing.id}
+                  className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
+                >
+                  <div className="relative w-full h-40 sm:h-48">
+                    <img
+                      src={listing.image}
+                      alt={listing.crop}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  </div>
+
+                  <div className="p-5 sm:p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="min-w-0">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 truncate">
+                          {listing.crop}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          by {listing.farmer}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm font-medium text-gray-700">
+                          {listing.rating}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                      <div>
+                        <span className="text-gray-500">Quantity:</span>
+                        <div className="font-medium text-gray-900">
+                          {listing.quantity}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Quality:</span>
+                        <div className="font-medium text-gray-900">
+                          {listing.quality}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center text-sm text-gray-600 mb-4">
+                      <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                      <span className="truncate">{listing.location}</span>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="text-xl sm:text-2xl font-bold text-green-600">
+                        ₹{Number(listing.price).toLocaleString()}/qt
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (!listing.ownerId) {
+                            alert(
+                              "Seller ID missing for this listing. Please re-seed crops with owner mapping."
+                            );
+                            return;
+                          }
+                          setChatListing(listing);
+                          setChatOpen(true);
+                        }}
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors min-h-[44px] w-full sm:w-auto"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        Contact Seller
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
         </div>
       </div>
 
       {/* Chat modal */}
-      <ChatBox open={chatOpen} onClose={() => setChatOpen(false)} listing={chatListing} />
+      <ChatBox
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        listing={chatListing}
+      />
     </div>
   );
 }
